@@ -16,6 +16,8 @@ namespace JFrame{
 			$this->view->addPath("modules" . DS . $namespace . DS . "views");
 		}
 		
+		function view(){return $this->view;}
+		
 		function render(){
 			
 		}

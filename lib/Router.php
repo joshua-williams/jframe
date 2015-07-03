@@ -10,10 +10,11 @@ namespace JFrame{
 		function __construct($app){
 			$this->app = $app;
 			$this->method = strtolower($_SERVER['REQUEST_METHOD']);
+			$this->uri = $_SERVER['REQUEST_URI'];
 		}
 		public function route(){
-			$this->uri = $_SERVER['REQUEST_URI'];
-			$route = $this->resolveStaticRoutes();
+			if($route = $this->resolveStaticRoutes()) return $route;
+			$route = $this->resolveSystemRoutes();
 			return $route;
 		}
 		
@@ -52,7 +53,15 @@ namespace JFrame{
 			}
 		}
 		
+		private function getModule(){
+			
+		}
 		private function resolveSystemRoutes(){
+			$defaultModule = $this->app->get('defaultModule');
+			$modules = $this->app->get('modules');
+			$ext = $this->app->get('viewExtension');
+			
+			if(!$modules) return false;
 			/*
 			 * MATCH SEGMENT 1 TO DEFAULT MODULE CONTROLLER
 			 * segment 1 == default module controller name
@@ -60,11 +69,38 @@ namespace JFrame{
 			 * MATCH SEGMENT 1 TO DEFAULT MO
 			 * segment 1 == module alias
 			 */
-			if($defaultModule = $this->app->get('defaultModule')){
-				$modules = $this->app->get('modules');
-				$class = $defaultModule . '\\Module';
-				die('<xmp>'.print_r($class,1));
+			$segment = explode('/', trim($this->uri, '/'));
+			switch(count($segment)){
+				case 1:
+					if($segment[0]){
+						if(!$module = $this->app->getModuleByAlias($segment[0])){
+							if(!$module = $this->app->getDefaultModule()) return false;
+						}
+						return new Route(array(
+							'module' => $module->get('namespace'),
+							'controller' => $module->get('defaultController'),
+							'callback' => $segment[0],
+						));
+					}else{
+						// if segment 1 is empty (home page)
+						if(!$defaultModule) return false;
+						if(!isset($modules[$defaultModule])) return false;
+						$module = $modules[$defaultModule];
+						if(!$ctrl = $module->get('defaultController')){
+							$ctrl = $module->get('namespace');
+						}
+						
+						$route = new Route(array(
+							'module' => $module->get('namespace'),
+							'controller' => $ctrl,
+							'callback' => 'index',
+							'view' => "index.$ext",
+						));
+						return $route;
+					}
+					break;
 			}
+			return false;
 		}
 		
 		private function resolveRoute(){
@@ -78,6 +114,7 @@ namespace JFrame{
 		private $controller;
 		private $callback;
 		private $validation;
+		private $view;
 		
 		function __construct(Array $properties = array()){
 			foreach($properties as $key=>$val){

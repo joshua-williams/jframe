@@ -9,6 +9,7 @@ namespace JFrame{
 		private $config;
 		private $path;
 		private $viewPath = array('default'=>array());
+		private $viewExtension = 'html';
 		private $modules = array();
 		private $defaultModule;
 		private $debug = false;
@@ -148,19 +149,33 @@ namespace JFrame{
 			}
 			$namespace = ($route->get('module')) ? $route->get('module') : $this->defaultModule;
 			if($controller = $route->get('controller')){
+				$ctrlResponse = false;
 				$this->route = $route;
 				$ctrlClass = "$namespace\Controller\\$controller";
 				if($ctrl = Loader::get($ctrlClass)){
 					if($callback = $route->get('callback')){
-						if(method_exists($ctrl, $callback)){
-							$ctrl->{$callback}();
+						if(is_callable("$ctrlClass::$callback")){
+							$ctrlResponse = $ctrl->{$callback}();
 						}
 					}
 				}
 			}
 			if($view = $route->get('view')){
-				
+				//die('<xmp>'.print_r($route,1));
 			}
+		}
+		
+		public function getModuleByAlias($alias){
+			foreach($this->modules as $module){
+				if($module->get('alias') === $alias) return $module;
+			}
+			return false;
+		}
+		
+		public function getDefaultModule(){
+			if(!$this->defaultModule) return false;
+			if(!isset($this->modules[$this->defaultModule])) return false;
+			return $this->modules[$this->defaultModule];
 		}
 	}
 	

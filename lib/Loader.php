@@ -2,7 +2,7 @@
 
 namespace JFrame{
 	use \DEBUG;
-	use \App;
+	
 	class Loader{
 		private static $paths = array();
 		private static $loaded = array();
