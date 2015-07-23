@@ -1,4 +1,5 @@
 {
+	"name": "swfx/jframe",
     "require": {
         "twig/twig": "~1.0"
     }
