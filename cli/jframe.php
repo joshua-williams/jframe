@@ -10,7 +10,7 @@ class CLI extends \JFrame\CLI{
 	}
 	
 	function addmodule(){
-		
+		require_once(PATH_JFRAME . '/cli/addmodule.php');
 	}
 	
 	private function getPath(){

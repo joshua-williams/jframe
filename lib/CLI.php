@@ -1,5 +1,6 @@
 <?php
 namespace JFrame{
+	define('DS', DIRECTORY_SEPARATOR);
 	
 	class CLI{
 		protected $cmd;
