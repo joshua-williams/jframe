@@ -19,10 +19,16 @@ namespace JFrame{
 		private $templateEngine = false;
 		
 		function __construct(Array $config = array()){
-			// load library 
-			foreach(array('Vars','Util', 'Loader', 'Module', 'Router', 'Controller', 'View', 'Template') as $dependency){
-				require_once(__DIR__ . DS . $dependency . '.php');
-			}
+			// autoload jframe library 
+			require_once(__DIR__ . DS . 'Util.php');
+			spl_autoload_register(function($class){
+				if(preg_match('/^JFrame/', $class)){
+					$path = preg_replace('/^JFrame\\\/', '', $class);
+					$path = __DIR__ . DS . Util::path($path) . '.php';
+					if(!file_exists($path)) return;
+					require_once($path);
+				}
+			});		
 			// debug settings
 			if(isset($config['debug'])){
 				$this->debug = ($config['debug']) ? true : false;
@@ -147,6 +153,7 @@ namespace JFrame{
 			if(!$route = $router->route()){
 				die('404 not found');
 			}
+			
 			$namespace = ($route->get('module')) ? $route->get('module') : $this->defaultModule;
 			if($controller = $route->get('controller')){
 				$ctrlResponse = false;
@@ -176,6 +183,24 @@ namespace JFrame{
 			if(!$this->defaultModule) return false;
 			if(!isset($this->modules[$this->defaultModule])) return false;
 			return $this->modules[$this->defaultModule];
+		}
+		
+		public static function getConfig($config, $format='array'){
+			if(file_exists("config/$config.php")){
+				$config =  include("config/$config.php");
+				if( !$config || $config === 1 || !is_array($config)) return false;
+			}elseif(file_exists("config/$config.json")){
+				$config = json_decode(file_get_contents("config/$config.json"));
+				if(!$config) return false;
+			}else{
+				die('not foundt');
+				return false;
+			}
+			switch(strtolower($format)){
+				case 'object':  Util::toObject($config); break;
+				case 'array': default: Util::toArray($config); break;
+			}
+			return $config;
 		}
 	}
 	
