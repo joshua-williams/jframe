@@ -18,5 +18,10 @@ while(($file = readdir($dir)) !== false){
 	}
 }	
 
+$dbRequired = $this->getResponse('Does this application require database? [y/n]');
+if($dbRequired == 'y'){
+	$this->dbsetup();
+}
 
+$this->write('Installation complete');
 ?>
