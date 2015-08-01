@@ -6,15 +6,10 @@ $config['host'] = ($host = $this->opt('host')) ? $host : $this->getResponse('Ple
 $config['database'] = ($db = $this->opt('database')) ? $db : $this->getResponse('Please enter database name');
 $config['username'] = ($username = $this->opt('username')) ? $username : $this->getResponse('Please enter username');
 $config['password'] = ($password = $this->opt('password')) ? $password : $this->getResponse('Please enter password');
-$config['name'] = 'default';
+$config['name'] = ($name = $this->opt('name')) ? $name : $this->getResponse('Please enter connection name');
 
 $db = new \JFrame\DB($config);
 if(!$db->has_connection) $this->setError('Database setup failed. '. $db->message);
-
-$sql = file_get_contents(PATH_JFRAME . '/cli/install.sql');
-foreach(explode(';', $sql) AS $query){
-	$db->query($query);
-}
 
 // WRITE CONFIG FILE
 $content = '';
@@ -27,10 +22,12 @@ $tpl ="
 		),
 ";
 $configPath = 'config/databases.php';
-
 if(file_exists($configPath)){
 	$_config = include($configPath);
 	if(is_array($_config)){
+		if(in_array($config['name'], array_keys($_config) )){
+			$this->setError('Connection name aready exists');
+		}
 		foreach($_config as $name=>$settings){
 			if(!is_array($settings)) continue;
 			$c = str_replace('{{name}}', $name, $tpl);
@@ -59,5 +56,5 @@ $content = "<?php
 $file = fopen($configPath, 'w');
 fwrite($file, $content);
 fclose($file);
-$this->write('Database setup complete');
+$this->write('Database connection complete');
 ?>

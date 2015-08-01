@@ -18,21 +18,26 @@ namespace JFrame {
 	
 		public static function getInstance($instance='default'){
 			if(isset(self::$instance[$instance])) return self::$instance[$instance];
-			$config = App::getConfig('databases', 'object');
+			$config = App::getConfig('databases');
 			if(!$config) return false;
 			self::$instance[$instance] = new DB(Vars::getFrom($config, $instance));
 			return self::$instance[$instance];
 		}
 	
-		function __construct($config=false){
+		function __construct(Array $config=array()){
 			if($config) $this->connection = $this->getConnection($config);
 		}
 	
-		function getConnection($config){
+		function getConnection(Array $config = array()){
+			if(!$host = Vars::getFrom($config, 'host')) return false;
+			if(!$database = Vars::getFrom($config, 'database')) return false;
+			if(!$username = Vars::getFrom($config, 'username')) return false;
+			if(!$password = Vars::getFrom($config, 'password')) return false;
 			$this->config = $config;
-			$dsn = 'mysql:dbname='.$config->database.';host='.$config->host;
+			
+			$dsn = 'mysql:dbname='.$database.';host='.$host;
 			try{
-				$connection = new PDO($dsn, $config->username, $config->password);
+				$connection = new PDO($dsn, $username, $password);
 				$this->has_connection = true;
 				return $connection;
 			}catch(PDOException $e){
