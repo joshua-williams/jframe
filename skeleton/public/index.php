@@ -1,6 +1,6 @@
 <?php
 
-require_once("../jframe/lib/App.php");
+require_once("../vendor/swfx/jframe/lib/App.php");
 $app = new JFrame\App(array(
 	'debug' => true,
 	'path' => dirname(__DIR__),
@@ -10,4 +10,5 @@ $app = new JFrame\App(array(
 
 ));
 
+$app->init();
 ?>
