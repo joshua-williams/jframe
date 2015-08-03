@@ -32,6 +32,14 @@ namespace JFrame{
 			$ctrl = Loader::getInstance($class);
 			die('<xmp>'.print_r($ctrl,1));
 		}
+		
+		public function events(){
+			return array();
+		}
+		
+		public function eventListeners(){
+			return array();
+		}
 	}
 }
 

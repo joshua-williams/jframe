@@ -14,6 +14,7 @@ namespace JFrame{
 		private $defaultModule;
 		private $debug = false;
 		private $route;
+		private $events = array();
 		private $routes = array();
 		private $segmentOffset = 0;
 		private $templateEngine = false;
@@ -92,6 +93,10 @@ namespace JFrame{
 					}
 				}
 			}
+			
+			$this->loadEvents();
+			$this->loadEventListeners();
+			
 			App::instance($this);
 		}
 		public static function instance($app=null){
@@ -130,9 +135,11 @@ namespace JFrame{
 				}
 				exit;
 			}
-			$this->modules[$namespace] = new $class;
+			$module = new $class;
+			$this->modules[$namespace] = &$module;
 			// add modules directory to loader path
 			Loader::addPath($this->path . '/modules');
+			return $module;
 		}
 
 		public function get($property, $default=null){
@@ -153,6 +160,8 @@ namespace JFrame{
 			if(!$route = $router->route()){
 				die('404 not found');
 			}
+			
+			$this->dispatchEvent('Router.Route', array('route'=>$route));
 			
 			$namespace = ($route->get('module')) ? $route->get('module') : $this->defaultModule;
 			if($controller = $route->get('controller')){
@@ -183,6 +192,58 @@ namespace JFrame{
 			if(!$this->defaultModule) return false;
 			if(!isset($this->modules[$this->defaultModule])) return false;
 			return $this->modules[$this->defaultModule];
+		}
+		
+		private function loadEvents(){
+			$this->events['Router'] = array(
+				'Route' => array()
+			);
+			foreach($this->modules as $module){
+				if(!$events = $module->events()) continue;
+				if(!is_array($events)) continue;
+				$namespace = $module->get('namespace');
+				foreach($events as $event){
+					if(!isset($this->events[$namespace])){
+						$this->events[$namespace] = array();
+					}
+					$this->events[$namespace][$event] = array();
+				}
+			}
+		}
+		
+		private function loadEventListeners(){
+			foreach($this->modules as $module){
+				$listeners = $module->eventListeners();
+				if(!is_array($listeners)) continue;
+				foreach($listeners as $event=>$listener){
+					$parts = explode('.', $event);
+					if(count($parts) != 2) continue;
+					$namespace = $parts[0];
+					$evt = $parts[1];
+					if(!isset($this->events[$namespace])) continue;
+					if(!isset($this->events[$namespace][$evt])) continue;
+					if(!is_object($listener)) continue;
+					if(get_class($listener) != 'Closure') continue;
+					$this->events[$namespace][$evt][] = $listener;
+				}
+			}
+		}
+		public function dispatchEvent($event, Array $data=array()){
+			if(!is_array($data)) return false;
+			if(!is_string($event)) return false;
+			$parts = explode('.', $event);
+			if(count($parts) != 2) return false;
+			$namespace = $parts[0];
+			$evt = $parts[1];
+			if(!isset($this->events[$namespace])) return false;
+			if(!isset($this->events[$namespace][$evt])) return false;
+			foreach($this->events[$namespace][$evt] as $callback){
+				$event = new Event($data);
+				$callback($event);
+				if($event->preventDefault()){
+					break;
+				}
+			}
 		}
 		
 		public static function getConfig($config, $format='array'){

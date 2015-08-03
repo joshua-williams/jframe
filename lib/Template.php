@@ -8,14 +8,14 @@ namespace JFrame{
 		private $view;
 		private $variables = array();
 		
-		public function render($view){
+		public function render($view, $print=false){
 			$html = $this->loadView($view);
 			$this->loadIncludes($html);
 			$this->joinParent($html);
 			$this->parseIfStatements($this->parent, $this->variables);
 			$this->replaceVariables($this->parent, $this->variables);
-			//die('<xmp>'.print_r($this->variables,1));
-			die($this->parent);
+			if($print) echo $this->parent;
+			return $this->parent;
 		}
 		
 		private function joinParent($html){

@@ -9,7 +9,7 @@ namespace JFrame{
 		private $variables = array();
 		private $charset;
 	
-		public function render($view, $return_string=false){
+		public function render($view, $print=false){
 			$html = null;
 			switch(strtolower($this->templateEngine)){
 				case 'jframe':
@@ -55,12 +55,8 @@ namespace JFrame{
 						die("view not found ($view)");
 					}
 			}
-			if($return_string){
-				return $html;
-			}else{
-				echo $html;
-			}
-			
+			if($print) echo $html;
+			return $html;
 		}
 		
 		public function addPath($path, $namespace=null){
