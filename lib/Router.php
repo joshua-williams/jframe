@@ -49,6 +49,7 @@ namespace JFrame{
 				foreach($variables as $key=>$val){
 					Vars::set($key, $val);
 				}
+				$r['module'] = Vars::getFrom($r, 'module', $this->app->get('defaultModule'));
 				return new Route($r);
 			}
 		}

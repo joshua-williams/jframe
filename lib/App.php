@@ -1,9 +1,9 @@
 <?php
 
 namespace JFrame{
-	define('DS', DIRECTORY_SEPARATOR);
-	define('JFRAME_PATH', dirname(__DIR__));
-	
+	if(!defined('DS')) define('DS', DIRECTORY_SEPARATOR);
+	if(!defined('PATH_JFRAME')) define('JFRAME_PATH', dirname(__DIR__));
+		
 	class App{
 		private static $_instance;
 		private $config;
@@ -29,7 +29,13 @@ namespace JFrame{
 					if(!file_exists($path)) return;
 					require_once($path);
 				}
-			});		
+			});	
+			// set site url constant
+			$site_url = Vars::getFrom($config, 'site_url', 'http://'. $_SERVER['HTTP_HOST']);
+			$site_url_ssl = Vars::getFrom($config, 'secure_site_url', 'https://'. $_SERVER['HTTP_HOST']);
+			define('SITE_URL', $site_url);
+			define('SITE_URL_SSL', $site_url_ssl);
+			
 			// debug settings
 			if(isset($config['debug'])){
 				$this->debug = ($config['debug']) ? true : false;
@@ -162,8 +168,7 @@ namespace JFrame{
 			}
 			
 			$this->dispatchEvent('Router.Route', array('route'=>$route));
-			
-			$namespace = ($route->get('module')) ? $route->get('module') : $this->defaultModule;
+			$namespace = $route->get('module');
 			if($controller = $route->get('controller')){
 				$ctrlResponse = false;
 				$this->route = $route;
@@ -254,7 +259,6 @@ namespace JFrame{
 				$config = json_decode(file_get_contents("config/$config.json"));
 				if(!$config) return false;
 			}else{
-				die('not foundt');
 				return false;
 			}
 			switch(strtolower($format)){
