@@ -163,7 +163,7 @@ namespace JFrame {
 			$tables = $this->loadObjectList("SHOW TABLES");
 			foreach($tables as $table){
 				$table = (array)$table;
-				$rtn[] = $table['Tables_in_'.$this->config->database];
+				$rtn[] = $table['Tables_in_'.$this->config['database']];
 			}
 			return isset($rtn)? $rtn : array();
 		}
@@ -176,7 +176,7 @@ namespace JFrame {
 		}
 		public static function table_exists($table){
 			$db = self::getInstance();
-			foreach($db->getTables() as $tbl){ if($table==$tbl) return true; }
+			foreach($db->tables() as $tbl){ if($table==$tbl) return true; }
 			return false;
 		}
 		public static function nextId($table){
