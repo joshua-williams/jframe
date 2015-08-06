@@ -1,9 +1,11 @@
 <?php
 namespace JFrame{
-	define('DS', DIRECTORY_SEPARATOR);
+	if(!defined('DS')) define('DS', DIRECTORY_SEPARATOR);
+	if(!defined('PATH_JFRAME')) define('PATH_JFRAME', dirname(__DIR__));
 	
 	class CLI{
 		protected $cmd;
+		protected $path;
 		
 		function __construct(){
 			$this->cmd = $this->getCmd();
@@ -11,6 +13,7 @@ namespace JFrame{
 			$method = get_class($this).'::'.$this->cmd;
 			if(!is_callable($method)) $this->setError("$this->cmd is an invalid command");
 			$ref = new \ReflectionClass(get_class($this));
+			$this->path = dirname(dirname($ref->getFileName()));
 			$this->{$this->cmd}();
 		}
 
