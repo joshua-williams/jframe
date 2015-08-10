@@ -11,7 +11,7 @@ namespace JFrame{
 		function __construct(){
 			$this->app = App::instance();
 			$this->view = new View();
-			$namespace = $this->app->get('module', $this->app->get('defaultModule'));
+			$namespace = $this->app->get('module', $this->app->config('default_module'));
 			$this->path = 'modules' . DS . $namespace;
 			$this->view->addPath("modules" . DS . $namespace . DS . "views");
 		}

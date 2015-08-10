@@ -69,7 +69,7 @@ namespace JFrame{
 				default: $html.= $this->renderList();
 			}
 			$html.="</form>";
-			die($html);
+			return $html;
 		}
 		
 		public function renderHiddenFields(){

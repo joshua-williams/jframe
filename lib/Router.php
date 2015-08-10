@@ -61,7 +61,6 @@ namespace JFrame{
 			$defaultModule = $this->app->config('default_module');
 			$modules = $this->app->get('modules');
 			$ext = $this->app->get('viewExtension');
-			
 			if(!$modules) return false;
 			/*
 			 * MATCH SEGMENT 1 TO DEFAULT MODULE CONTROLLER
