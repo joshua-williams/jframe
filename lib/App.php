@@ -69,7 +69,7 @@ namespace JFrame{
 			if($this->moduleLoaded($namespace)) return false;
 			$modDir = $this->config['path'] . DS . 'modules' . DS . $namespace;
 			if(!is_dir($modDir)){
-				if($this->debug){
+				if($this->config('debug')){
 					die("Module directory not found: $modDir");
 				}
 				exit;
@@ -116,6 +116,9 @@ namespace JFrame{
 				if($this->config['debug']) echo 'Application path not found: ' . $this->config['path'];
 				exit;
 			}
+			// change directories to application path
+			chdir($this->config['path']);
+			
 			// route to controller
 			$router = new Router($this);
 			if(!$route = $router->route()){
@@ -225,21 +228,25 @@ namespace JFrame{
 				'modules' => false,
 				'default_module' => false,
 			);
+			
 			// merge static config with default config
 			$path = rtrim(Vars::getFrom($config, 'path', $this->config['path']));
 			$configPath = $path . DS . 'config' . DS . 'config.php';
 			$cnf = (file_exists($configPath)) ? include($configPath) : false;
 			if(is_array($cnf)){
 				foreach($this->config as $key=>$val){
-					if(!isset($cnf[$key]) || !is_string($cnf[$key])) continue;
+					if(!isset($cnf[$key])) continue;
+					if(!is_string($cnf[$key]) && !is_bool($cnf[$key])) continue;
 					$this->config[$key] = $cnf[$key];
 				}
 			}
 			// merge user defined config into application config overriding static config
-			foreach($this->config as $key=>$val){
-				if(!isset($config[$key]) || !is_string($config[$key])) continue;
+			foreach($config as $key=>$val){
+				if(!isset($this->config[$key])) continue;
+				if(!is_string($config[$key]) && !is_bool($config[$key])) continue;
 				$this->config[$key] = $val;
 			}
+			
 			// load modules
 			if(is_array($this->config['modules'])){
 				foreach($this->config['modules'] as $module){
@@ -252,6 +259,7 @@ namespace JFrame{
 					$this->loadModule(trim($module));
 				}
 			}
+			
 			// route settings
 			if(isset($config['routes']) && is_array($config['routes'])){
 				foreach($config['routes'] as $route){
