@@ -105,20 +105,30 @@ namespace JFrame{
 			}
 			 return "<table>".chr(10) . "<tbody>" . chr(10) . $fields . "</tbody>" . chr(10) . "</table>";
 		}
+		
 		private function renderAttributes(){
 			$attributes = array();
+			if($this->hasFile() && !isset($this->attributes['enctype'])){
+				$this->attributes['enctype'] = 'multipart/form-data';
+			}
 			foreach($this->attributes as $key=>$val){
+				
 				$attributes[] = $key . '="' . addslashes($val) . '"';
 			}
 			return implode(' ', $attributes);
 		}
 		
+		private function hasFile(){
+			foreach($this->fields as $field){
+				if($field->type() == 'file') return true;
+			}
+			return false;
+		}		
 	}
 	
 	
-	
-	/*
-	 * @desc - Form Field Class
+	/**
+	 * @desc Form Field Class
 	 */
 	class FormField{
 		private $type;
@@ -168,13 +178,14 @@ namespace JFrame{
 				case 'text':
 				case 'password':
 				case 'hidden':
+				case 'file':
 				case 'radio': return $this->renderText(); break;
 				case 'textarea': return $this->renderTextArea(); break;
 			}
 		}
 		
 		function isValid(){
-			$fieldTypes = array('text','password','number','textarea','radio','checkbox','hidden');
+			$fieldTypes = array('text','password','number','textarea','radio','checkbox','file','hidden');
 			if(!in_array($this->type, $fieldTypes)) return false;
 			return true;
 		}
