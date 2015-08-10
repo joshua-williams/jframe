@@ -246,7 +246,11 @@ namespace JFrame{
 				if(!is_string($config[$key]) && !is_bool($config[$key])) continue;
 				$this->config[$key] = $val;
 			}
-			
+			// without any modules defined the application can do nothing so die.
+			if(!$modules){
+				if($this->config('debug')) echo "There are not modules defined in this application.";
+				exit;
+			}
 			// modules config property support comma seperated string or array of modules
 			if(is_string($this->config['modules'])){
 				$modules = array();
@@ -255,17 +259,11 @@ namespace JFrame{
 				}
 				$this->config['modules'] = $modules;
 			}
-			
 			// load modules
 			if(is_array($this->config['modules'])){
 				foreach($this->config['modules'] as $module){
 					if(!is_string($module)) continue;
 					$this->loadModule($module);
-				}
-			}elseif(is_string($this->config['modules'])){
-				$modules = explode(',', $this->config['modules']);
-				foreach($modules as $module){
-					$this->loadModule(trim($module));
 				}
 			}
 			
