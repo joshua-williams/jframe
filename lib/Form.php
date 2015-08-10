@@ -55,6 +55,10 @@ namespace JFrame{
 
 		
 		public function render(){
+			if(method_exists($this, 'fields')){
+				$formFields = $this->fields();
+				if(is_array($formFields)) $this->addFields($formFields);
+			}
 			$html = "<form " . $this->renderAttributes() . ">".chr(10);
 			$html.= $this->renderHiddenFields();
 			$fields = array();
@@ -69,7 +73,12 @@ namespace JFrame{
 		}
 		
 		public function renderHiddenFields(){
-			$html = '';
+			$app = App::instance();
+			$encKey = ($k = $app->config('enc_key')) ? $k : ' ';
+			$token = md5($app->config('hash') . 'submit');
+			$json = json_encode(array('form'=>get_class($this), 'time'=>time()));
+			$data = Util::encrypt($encKey, $json);
+			$html = "<input type='hidden' name='$token' value='$data' />";
 			foreach($this->fields as $field){
 				if($field->type() != 'hidden') continue;
 				$html.= $field->render();
