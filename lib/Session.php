@@ -64,7 +64,9 @@ namespace JFrame{
 		}
 		
 		public function set($var, $val){
-			
+			if(!is_string($var)) return false;
+			if(!$this->started()) $this->start();
+			Vars::setTo($_SESSION, $var, $val);
 		}
 	}
 }
