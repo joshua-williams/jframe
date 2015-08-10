@@ -76,7 +76,7 @@ namespace JFrame{
 			}
 			$modPath = $modDir . DS . 'Module.php';
 			if(!is_file($modPath)){
-				if($this->debug){
+				if($this->config('debug')){
 					die("Module path not found: $modPath");
 				}
 				exit;
@@ -84,7 +84,7 @@ namespace JFrame{
 			require_once($modPath);
 			$class = "$namespace\Module";
 			if(!class_exists($class)){
-				if($this->debug){
+				if($this->config('debug')){
 					die("Module class not found $class");
 				}
 				exit;
@@ -245,6 +245,15 @@ namespace JFrame{
 				if(!isset($this->config[$key])) continue;
 				if(!is_string($config[$key]) && !is_bool($config[$key])) continue;
 				$this->config[$key] = $val;
+			}
+			
+			// modules config property support comma seperated string or array of modules
+			if(is_string($this->config['modules'])){
+				$modules = array();
+				foreach(explode(',', $this->config['modules']) as $module){
+					$modules[] = trim($module);
+				}
+				$this->config['modules'] = $modules;
 			}
 			
 			// load modules
