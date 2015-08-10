@@ -32,27 +32,43 @@ namespace JFrame {
 					}else{
 						if(!is_array($var) && !is_object($var)) return $default;
 						$var = (array) $var;
-						//echo "$k <xmp>".print_r($var,1).'</xmp>';
 						if(!isset($var[$k])) return $default;
 						$var = $var[$k];
 					}
 				}
 			}
-			
 		}
-		public static function getEscape($var,$default=false,$method=false){
-			switch($method){
-				case 'get':
-					if(!isset($_GET[$var])) return $default;
-					return ($rtn = mysql_real_escape_string($_GET[$var]))? $rtn : $default;
-				case 'post':
-					if(!isset($_POST[$var])) return $default;
-					return ($rtn = mysql_real_escape_string($_POST[$var]))? $rtn : $default;
-				default:
-					if(isset($_POST[$var])) return mysql_real_escape_string($_POST[$var]);
-					if(isset($_GET[$var])) return mysql_real_escape_string($_GET);
-					return $default;
+		/**
+		 * @param mixed $source An array or object to set the
+		 * @param string $property period seperated property
+		 * @param mixed $value
+		 */
+		public static function setTo(&$source, $property, $value){
+			if(!is_array($source) && !is_object($source)) return false;
+			$parts = explode('.', $property);
+			if(count($parts) == 1){
+				switch(gettype($source)){
+					case 'array': return $source[$parts[0]] = $value; break;
+					case 'object': return $source->{$parts[0]} = $value; break;
+				}
 			}
+			switch(gettype($source)){
+				case 'array': 
+					$source[$parts[0]] = array(); 
+					$prop = &$source[$parts[0]];
+					break;
+				case 'object': 
+					$source->{$parts[0]} = array(); 
+					$prop = &$source->{$parts[0]};
+					break;
+			}
+		
+			for($a=1; $a<count($parts); $a++){
+				$prop[$parts[$a]] = array();
+				$prop = &$prop[$parts[$a]];
+			}
+			$prop = $value;
+			return $source;
 		}
 	
 		public static function set($var,$val=false,$method='get'){
