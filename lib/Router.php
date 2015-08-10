@@ -49,7 +49,7 @@ namespace JFrame{
 				foreach($variables as $key=>$val){
 					Vars::set($key, $val);
 				}
-				$r['module'] = Vars::getFrom($r, 'module', $this->app->get('defaultModule'));
+				$r['module'] = Vars::getFrom($r, 'module', $this->app->get('default_module'));
 				return new Route($r);
 			}
 		}
@@ -58,7 +58,7 @@ namespace JFrame{
 			
 		}
 		private function resolveSystemRoutes(){
-			$defaultModule = $this->app->config('defaultModule');
+			$defaultModule = $this->app->config('default_module');
 			$modules = $this->app->get('modules');
 			$ext = $this->app->get('viewExtension');
 			

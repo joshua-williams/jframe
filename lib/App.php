@@ -146,9 +146,9 @@ namespace JFrame{
 		}
 		
 		public function getDefaultModule(){
-			if(!$this->config('defaultModule')) return false;
-			if(!isset($this->modules[$this->config('defaultModule')])) return false;
-			return $this->modules[$this->config('defaultModule')];
+			if(!$this->config('default_module')) return false;
+			if(!isset($this->modules[$this->config('default_module')])) return false;
+			return $this->modules[$this->config('default_module')];
 		}
 		
 		private function loadEvents(){
@@ -220,10 +220,10 @@ namespace JFrame{
 				'form_timeout' => 10,
 				'hash' => 'application_hash',
 				'enc_key' => 'my_encryption_key',
-				'templateEngine' => false,
-				'segmentOffset' => 0,
+				'template_engine' => false,
+				'segment_offset' => 0,
 				'modules' => false,
-				'defaultModule' => false,
+				'default_module' => false,
 			);
 			// merge static config with default config
 			$path = rtrim(Vars::getFrom($config, 'path', $this->config['path']));
@@ -273,7 +273,7 @@ namespace JFrame{
 		 */
 		public function addRoute(Array $route){
 			if(!isset($route['uri'])) return;
-			if(!$this->config['defaultModule'] && !isset($route['module'])) return;
+			if(!$this->config['default_module'] && !isset($route['module'])) return;
 			foreach($this->routes as $key=>$_route){
 				if($_route['uri'] == $route['uri']){
 					return;
