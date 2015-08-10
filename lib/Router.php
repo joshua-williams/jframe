@@ -58,7 +58,7 @@ namespace JFrame{
 			
 		}
 		private function resolveSystemRoutes(){
-			$defaultModule = $this->app->get('defaultModule');
+			$defaultModule = $this->app->config('defaultModule');
 			$modules = $this->app->get('modules');
 			$ext = $this->app->get('viewExtension');
 			
