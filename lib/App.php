@@ -247,7 +247,7 @@ namespace JFrame{
 				$this->config[$key] = $val;
 			}
 			// without any modules defined the application can do nothing so die.
-			if(!$modules){
+			if(!$this->config['modules']){
 				if($this->config('debug')) echo "There are not modules defined in this application.";
 				exit;
 			}
@@ -283,7 +283,7 @@ namespace JFrame{
 			}
 		}
 		/**
-		 * @desc Static routes will be overwritten by routes passed in application construct
+		 * @desc Static routes will be overwritten by routes passed in application construct. This can be called on application instance before initialization.
 		 * @param Array $route [uri, module, controller, callback]
 		 */
 		public function addRoute(Array $route){
