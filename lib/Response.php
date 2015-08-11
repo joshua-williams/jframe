@@ -15,13 +15,11 @@ namespace JFrame{
 		}
 		
 		function setData($prop, $value=null){
-			if(!is_string($prop)) return false;
-			$this->data[$prop] = $value;
+			Vars::setTo($this->data, $prop, $value);
 		}
 		
 		function getData($prop=null, $default=null){
-			if(!$prop) return $this->data;
-			return $this->prop($prop);
+			return Vars::getFrom($this->data, $prop, $default);
 		}
 		
 		function set($prop, $val=false){
@@ -72,7 +70,6 @@ namespace JFrame{
 		function getWarnings(){
 			return $this->warnings;
 		}
-		
 		function setReturn($url){
 			if(!is_string($url)) return false;
 			$this->return = $url;

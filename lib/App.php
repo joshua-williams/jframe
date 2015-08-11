@@ -342,7 +342,13 @@ namespace JFrame{
 				$this->redirect(Vars::getFrom($_SERVER, 'HTTP_REFERER', $this->config('site_url')));
 			}
 			if(!$form = Loader::get($data->form)) return false;
-			$form->action();
+			$response = $form->action();
+			if(is_object($response) && get_class($response) == 'JFrame\Response'){
+				$return = ($r = $response->get('return')) ? $r : $this->config('site_url');
+				$this->redirect($return);
+			}else{
+				$this->redirect($this->config('site_url'));
+			}
 		}
 	}
 	
