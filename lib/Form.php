@@ -6,7 +6,16 @@ namespace JFrame{
 		private $attributes = array();
 		private $properties = array();
 		private $fields = array();
-
+		
+		/**
+		 * 
+		 * @desc Will gets/sets form property. 
+		 * When prop is string and value is empty will return property value.
+		 * When prop is string and value is set it will set single form property
+		 * When prop is array it will set each array element as property.
+		 * @param string $prop
+		 * @param string $value
+		 */
 		public function prop($prop=null, $value='no_val'){
 			if(!$prop){
 				return $this->properties();
@@ -52,7 +61,6 @@ namespace JFrame{
 				$this->addField($field);
 			}
 		}
-
 		
 		public function render(){
 			if(method_exists($this, 'fields')){
@@ -74,11 +82,20 @@ namespace JFrame{
 		
 		public function renderHiddenFields(){
 			$app = App::instance();
+			// set form token to prevent attacks
 			$encKey = ($k = $app->config('enc_key')) ? $k : ' ';
-			$token = md5($app->config('hash') . 'submit');
-			$json = json_encode(array('form'=>get_class($this), 'time'=>time()));
-			$data = Util::encrypt($encKey, $json);
-			$html = "<input type='hidden' name='$token' value='$data' />";
+			$tokenName = md5($app->config('hash') . "submit");
+			$formClass = get_class($this);
+			$time = time();
+			$sessionKey = md5($formClass);
+			$json = json_encode(array('form'=>$formClass, 'time'=>$time));
+			$app->session->set("token.form.$sessionKey", array('form'=>$formClass,'time'=>$time));
+			$tokenValue = Util::encrypt($encKey, $json);
+			$html = "<input type='hidden' name='$tokenName' value='$tokenValue' />";
+			// set default return value
+			$return = ($r = $this->prop('return')) ? $r : $app->config('site_url');
+			$html.="<input type='hidden' name='return' value='$return'>";
+			
 			foreach($this->fields as $field){
 				if($field->type() != 'hidden') continue;
 				$html.= $field->render();
@@ -100,7 +117,8 @@ namespace JFrame{
 			$html = '';
 			foreach($this->fields as $field){
 				if($field->type() == 'hidden') continue;
-				$html.="<div><label>" . $field->label() . "<label>" . $field->render() . "</div>"; 
+				$label = ($l = $field->label()) ? "<label>$l</label>" : '';
+				$html.="<div>$label" . $field->render() . "</div>"; 
 			}
 			return $html;
 		}
@@ -117,13 +135,19 @@ namespace JFrame{
 		
 		private function renderAttributes(){
 			$attributes = array();
+			// automatically set the enctype if file form field exists and if not enctype is not explicitly defined
 			if($this->hasFile() && !isset($this->attributes['enctype'])){
 				$this->attributes['enctype'] = 'multipart/form-data';
 			}
+			// set default method as post if not explicitly defined
+			if(!isset($this->attributes['method'])) $this->attributes['method'] = 'post';
+			// set the action to the site url
+			$this->attributes['action'] = App::instance()->config('site_url');
+			
 			foreach($this->attributes as $key=>$val){
-				
 				$attributes[] = $key . '="' . addslashes($val) . '"';
 			}
+			
 			return implode(' ', $attributes);
 		}
 		
@@ -133,6 +157,10 @@ namespace JFrame{
 			}
 			return false;
 		}		
+		
+		public function action(){
+			
+		}
 	}
 	
 	
@@ -188,13 +216,14 @@ namespace JFrame{
 				case 'password':
 				case 'hidden':
 				case 'file':
+				case 'submit':
 				case 'radio': return $this->renderText(); break;
 				case 'textarea': return $this->renderTextArea(); break;
 			}
 		}
 		
 		function isValid(){
-			$fieldTypes = array('text','password','number','textarea','radio','checkbox','file','hidden');
+			$fieldTypes = array('text','password','number','textarea','radio','checkbox','file','hidden','submit');
 			if(!in_array($this->type, $fieldTypes)) return false;
 			return true;
 		}

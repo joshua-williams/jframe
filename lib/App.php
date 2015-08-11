@@ -19,20 +19,14 @@ namespace JFrame{
 		private static $_instance;
 		private $initialized = false;
 		private $config;
-		private $viewPath = array('default'=>array());
 		private $viewExtension = 'html';
-		private $modules = array();
 		private $route;
-		private $events = array();
 		private $routes = array();
+		private $modules = array();
+		private $events = array();
+		private $viewPath = array('default'=>array());
 		
 		function __construct(Array $config = array()){
-			// set site url constant
-			$site_url = Vars::getFrom($config, 'site_url', 'http://'. $_SERVER['HTTP_HOST']);
-			$site_url_ssl = Vars::getFrom($config, 'site_url_ssl', 'https://'. $_SERVER['HTTP_HOST']);
-			define('SITE_URL', $site_url);
-			define('SITE_URL_SSL', $site_url_ssl);
-		
 			/* set view path(s)
 			if(isset($config['viewPath'])){
 				$path = $config['viewPath'];
@@ -51,6 +45,8 @@ namespace JFrame{
 			$this->loadEvents();
 			$this->loadEventListeners();
 			App::instance($this);
+			$this->session = new Session();
+			$this->session->start();
 		}
 		
 		public static function instance($app=null){
@@ -118,7 +114,8 @@ namespace JFrame{
 			}
 			// change directories to application path
 			chdir($this->config['path']);
-			
+			// process form submission
+			$this->processForm();
 			// route to controller
 			$router = new Router($this);
 			if(!$route = $router->route()){
@@ -236,14 +233,14 @@ namespace JFrame{
 			if(is_array($cnf)){
 				foreach($this->config as $key=>$val){
 					if(!isset($cnf[$key])) continue;
-					if(!is_string($cnf[$key]) && !is_bool($cnf[$key])) continue;
+					if(!is_numeric($cnf[$key]) && !is_string($cnf[$key]) && !is_bool($cnf[$key])) continue;
 					$this->config[$key] = $cnf[$key];
 				}
 			}
 			// merge user defined config into application config overriding static config
 			foreach($config as $key=>$val){
 				if(!isset($this->config[$key])) continue;
-				if(!is_string($config[$key]) && !is_bool($config[$key])) continue;
+				if(!is_numeric($config[$key]) && !is_string($config[$key]) && !is_bool($config[$key])) continue;
 				$this->config[$key] = $val;
 			}
 			// without any modules defined the application can do nothing so die.
@@ -312,6 +309,40 @@ namespace JFrame{
 				case 'array': default: Util::toArray($config); break;
 			}
 			return $config;
+		}
+		
+		public function redirect($url){
+			header("Location: $url");
+			exit;
+		}
+		
+		private function processForm(){
+			$encKey = ($k = $this->config('enc_key')) ? $k : ' ';
+			$tokenName = md5($this->config('hash') . 'submit');
+			if(!$tokenValue = Vars::get($tokenName)) return false;
+			$json = Util::decrypt($encKey, $tokenValue);
+			if(!$data = json_decode($json)) return false;
+			
+			$formTimeout = $this->config('form_timeout');
+			if($formTimeout && is_numeric($formTimeout)){
+				$timeLapsed = time() - $data->time;
+				$maxTime = $formTimeout * 60;
+				// make sure the form has not lapsed
+				if($timeLapsed > $maxTime){
+					$this->redirect(Vars::getFrom($_SERVER, 'HTTP_REFERER', $this->config('site_url')));
+				}
+			}
+			
+			// make sure session variable matches what is submitted
+			$sessionKey = md5($data->form);
+			if(!$sessionToken = $this->session->get("token.form.$sessionKey")){
+				$this->redirect(Vars::getFrom($_SERVER, 'HTTP_REFERER', $this->config('site_url')));
+			}
+			if(($sessionToken['form'] != $data->form) || ($sessionToken['time'] != $data->time)){
+				$this->redirect(Vars::getFrom($_SERVER, 'HTTP_REFERER', $this->config('site_url')));
+			}
+			if(!$form = Loader::get($data->form)) return false;
+			$form->action();
 		}
 	}
 	
