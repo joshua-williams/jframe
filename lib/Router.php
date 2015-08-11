@@ -49,7 +49,7 @@ namespace JFrame{
 				foreach($variables as $key=>$val){
 					Vars::set($key, $val);
 				}
-				$r['module'] = Vars::getFrom($r, 'module', $this->app->get('default_module'));
+				$r['module'] = Vars::getFrom($r, 'module', $this->app->config('default_module'));
 				return new Route($r);
 			}
 		}
@@ -73,6 +73,7 @@ namespace JFrame{
 			switch(count($segment)){
 				case 1:
 					if($segment[0]){
+						
 						if(!$module = $this->app->getModuleByAlias($segment[0])){
 							if(!$module = $this->app->getDefaultModule()) return false;
 						}
@@ -89,7 +90,6 @@ namespace JFrame{
 						if(!$ctrl = $module->get('defaultController')){
 							$ctrl = $module->get('namespace');
 						}
-						
 						$route = new Route(array(
 							'module' => $module->get('namespace'),
 							'controller' => $ctrl,

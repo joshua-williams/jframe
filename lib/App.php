@@ -112,6 +112,7 @@ namespace JFrame{
 				if($this->config['debug']) echo 'Application path not found: ' . $this->config['path'];
 				exit;
 			}
+			
 			// change directories to application path
 			chdir($this->config['path']);
 			// process form submission
@@ -121,9 +122,10 @@ namespace JFrame{
 			if(!$route = $router->route()){
 				die('404 not found');
 			}
-			
 			$this->dispatchEvent('Router.Route', array('route'=>$route));
+			
 			$namespace = $route->get('module');
+			
 			if($controller = $route->get('controller')){
 				$ctrlResponse = false;
 				$this->route = $route;
@@ -136,6 +138,7 @@ namespace JFrame{
 					}
 				}
 			}
+			
 		}
 		
 		public function getModuleByAlias($alias){
@@ -194,6 +197,7 @@ namespace JFrame{
 			$evt = $parts[1];
 			if(!isset($this->events[$namespace])) return false;
 			if(!isset($this->events[$namespace][$evt])) return false;
+			
 			foreach($this->events[$namespace][$evt] as $callback){
 				$event = new Event($data);
 				$callback($event);
