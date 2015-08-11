@@ -9,7 +9,9 @@ namespace JFrame{
 		private $variables = array();
 		private $charset;
 	
-		public function render($view, $print=false){
+		public function render($view, Array $variables=array(), $print=null){
+			if($variables) $this->vars($variables);
+			
 			$html = null;
 			switch(strtolower($this->templateEngine)){
 				case 'jframe':
@@ -43,6 +45,7 @@ namespace JFrame{
 					$html = $twig->render(Util::path($view), $this->variables);		
 					break;
 				default:
+					
 					foreach($this->paths['default'] as $path){
 						$viewPath = Util::path("$path/$view");
 						if(!is_file($viewPath)) continue;
@@ -55,6 +58,7 @@ namespace JFrame{
 						die("view not found ($view)");
 					}
 			}
+			
 			if($print) echo $html;
 			return $html;
 		}
