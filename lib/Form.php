@@ -6,7 +6,7 @@ namespace JFrame{
 		private $attributes = array();
 		private $properties = array();
 		private $fields = array();
-		
+		private $fieldsLoaded;
 		/**
 		 * 
 		 * @desc Will gets/sets form property. 
@@ -42,12 +42,13 @@ namespace JFrame{
 			}
 		}
 		
-		public function getField($name){
-			if(!is_string($name)) return false;
-			foreach($this->fields as $field){
-				if($field->attr('name') == $name) return $field;
+		public function loadFields(){
+			if($this->fieldsLoaded) return false;
+			if(method_exists($this, 'fields')){
+				$formFields = $this->fields();
+				if(is_array($formFields)) $this->addFields($formFields);
 			}
-			return false;
+			$this->fieldsLoaded = true;
 		}
 		
 		public function addField(Array $prop){
@@ -62,11 +63,25 @@ namespace JFrame{
 			}
 		}
 		
-		public function render(){
-			if(method_exists($this, 'fields')){
-				$formFields = $this->fields();
-				if(is_array($formFields)) $this->addFields($formFields);
+		public function getField($name){
+			$this->loadFields();
+			if(!is_string($name)) return false;
+			foreach($this->fields as $field){
+				if($field->attr('name') == $name) return $field;
 			}
+			return false;
+		}
+		
+		public function getFields(Array $names){
+			foreach($names as $name){
+				$field = $this->getField($name);
+				if($field) $fields[] = $field;
+			}
+			return isset($fields) ? $fields : array();
+		}
+		
+		public function render(){
+			if(!$this->fieldsLoaded) $this->loadFields();
 			$html = "<form " . $this->renderAttributes() . ">".chr(10);
 			$html.= $this->renderHiddenFields();
 			$fields = array();

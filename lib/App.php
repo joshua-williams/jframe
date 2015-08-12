@@ -138,7 +138,6 @@ namespace JFrame{
 					}
 				}
 			}
-			
 		}
 		
 		public function getModuleByAlias($alias){
@@ -326,8 +325,8 @@ namespace JFrame{
 			if(!$tokenValue = Vars::get($tokenName)) return false;
 			$json = Util::decrypt($encKey, $tokenValue);
 			if(!$data = json_decode($json)) return false;
-			
 			$formTimeout = $this->config('form_timeout');
+			
 			if($formTimeout && is_numeric($formTimeout)){
 				$timeLapsed = time() - $data->time;
 				$maxTime = $formTimeout * 60;
@@ -346,11 +345,15 @@ namespace JFrame{
 				$this->redirect(Vars::getFrom($_SERVER, 'HTTP_REFERER', $this->config('site_url')));
 			}
 			if(!$form = Loader::get($data->form)) return false;
+			
 			$response = $form->action();
+
 			if(is_object($response) && get_class($response) == 'JFrame\Response'){
 				$return = ($r = $response->get('return')) ? $r : $this->config('site_url');
+				$this->session->set('flashMessage', $response);
 				$this->redirect($return);
 			}else{
+				return;
 				$this->redirect($this->config('site_url'));
 			}
 		}

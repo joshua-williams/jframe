@@ -190,7 +190,7 @@ namespace JFrame{
 			if(preg_match_all($pattern, $markup, $matches)){
 				for($a=0; $a<count($matches[0]); $a++){
 					$str = $matches[1][$a];
-					$val = $this->str2val($str, $vars);
+					$val = Vars::getFrom($vars, $str);
 					$markup = str_replace($matches[0][$a], $val, $markup);
 				}
 			}
@@ -271,9 +271,8 @@ namespace JFrame{
 			}
 			ksort($ifStatements);
 			return $ifStatements;
-		}		
+		}
 	}
-
 }
 
 ?>
