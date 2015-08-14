@@ -23,7 +23,7 @@ namespace JFrame{
 			$modules = $this->app->get('modules');
 			$segments = explode('/', trim($this->uri, '/'));
 			foreach($routes as $r){
-				//if($r['uri'] != 'account/save/:account_id') continue;
+				if(DEFINED('DEBUG_ROUTER')) echo $r['uri'] . '<br>';
 				$validate = Vars::getFrom($r, 'validate');
 				$validationFormat;
 				$variables = array();
