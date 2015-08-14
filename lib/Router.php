@@ -10,7 +10,7 @@ namespace JFrame{
 		function __construct($app){
 			$this->app = $app;
 			$this->method = strtolower($_SERVER['REQUEST_METHOD']);
-			$this->uri = $_SERVER['REQUEST_URI'];
+			$this->uri = trim($_SERVER['REQUEST_URI'], '/');
 		}
 		public function route(){
 			if($route = $this->resolveStaticRoutes()) return $route;
@@ -23,25 +23,39 @@ namespace JFrame{
 			$modules = $this->app->get('modules');
 			$segments = explode('/', trim($this->uri, '/'));
 			foreach($routes as $r){
+				//if($r['uri'] != 'account/save/:account_id') continue;
+				$validate = Vars::getFrom($r, 'validate');
+				$validationFormat;
 				$variables = array();
 				$_segments = explode('/', trim($r['uri'], '/'));
 				// make sure route method property matches request method
 				$method = strtolower(Vars::getFrom($r, 'method', 'get'));
+				
 				if(($method != '*') && $this->method !== $method){ continue;}
 				
 				if(count($segments) != count($_segments)) continue;
 				
-				for($a=0; $a<count($segments); $a++){
+				for($a=0, $b=0; $a<count($segments); $a++){
+					//if($r['uri'] != 'account/save') continue 2;
+					
 					$seg = $segments[$a];
 					$_seg = $_segments[$a];
 					if(preg_match('/:(\w+)/', $_seg, $match)){
-						$regex = Vars::getFrom($r, "validate." . $match[1]);
-						if($regex){
-							if(!preg_match("/$regex/", $seg)){
-								continue 2;
-							}
+						if(!$validate) continue 2;
+						if(is_string($validate)){
+							$validationFormat = 'string';
+							$regex = $validate;
+						}elseif(is_array($validate)){
+							$validationFormat = 'array';
+							if(!isset($validate[$b])) continue 2;
+							$regex = $validate[$b];
+						}else{
+							continue 2;
 						}
-						$variables[$match[1]] = $seg;
+						$varName = $match[1];
+						$pattern = "/$regex/";
+						if(!preg_match($pattern, $seg)) continue 2;
+						$variables[$varName] = $seg;
 					}else{
 						if($seg != $_seg) continue 2;
 					}
@@ -50,7 +64,8 @@ namespace JFrame{
 					Vars::set($key, $val);
 				}
 				$r['module'] = Vars::getFrom($r, 'module', $this->app->config('default_module'));
-				return new Route($r);
+				$route = new Route($r);
+				return $route;
 			}
 		}
 		
@@ -113,7 +128,7 @@ namespace JFrame{
 		private $module;
 		private $controller;
 		private $callback;
-		private $validation;
+		private $validate;
 		private $view;
 		
 		function __construct(Array $properties = array()){

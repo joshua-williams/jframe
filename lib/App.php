@@ -18,6 +18,7 @@ namespace JFrame{
 	class App{
 		private static $_instance;
 		private $initialized = false;
+		private $isFormSubmission;
 		private $config;
 		private $viewExtension = 'html';
 		private $route;
@@ -42,12 +43,80 @@ namespace JFrame{
 				}
 			}*/
 			$this->loadConfig($config);
+			chdir($this->config('path'));
 			$this->loadEvents();
 			$this->loadEventListeners();
+		}
+
+		public function init(){
+			$this->initialized = true;
 			App::instance($this);
 			$this->session = new Session();
 			$this->session->start();
+			
+			$this->processForm();
+			
+			// route to controller
+			$router = new Router($this);
+			if(!$route = $router->route()){
+				die('404 not found');
+			}
+			$this->dispatchEvent('Router.Route', array('route'=>$route));
+				
+			$namespace = $route->get('module');
+				
+			if($controller = $route->get('controller')){
+				$ctrlResponse = false;
+				$this->route = $route;
+				$ctrlClass = "$namespace\Controller\\$controller";
+				if($ctrl = Loader::get($ctrlClass)){
+					if($callback = $route->get('callback')){
+						if(is_callable("$ctrlClass::$callback")){
+							$ctrlResponse = $ctrl->{$callback}();
+						}
+					}
+				}
+			}
 		}
+
+		private function processForm(){
+			$encKey = ($k = $this->config('enc_key')) ? $k : ' ';
+			$tokenName = md5($this->config('hash') . 'submit');
+			if(!$tokenValue = Vars::get($tokenName)) return false;
+			$this->isFormSubmission = true;
+			$json = Util::decrypt($encKey, $tokenValue);
+			if(!$data = json_decode($json)) return false;
+			$formTimeout = $this->config('form_timeout');
+				
+			if($formTimeout && is_numeric($formTimeout)){
+				$timeLapsed = time() - $data->time;
+				$maxTime = $formTimeout * 60;
+				// make sure the form has not lapsed
+				if($timeLapsed > $maxTime){
+					$this->redirect(Vars::getFrom($_SERVER, 'HTTP_REFERER', $this->config('site_url')));
+				}
+			}
+			
+			// make sure session variable matches what is submitted
+			$sessionKey = md5($data->form);
+			if(!$sessionToken = $this->session->get("token.form.$sessionKey")){
+				$this->redirect(Vars::getFrom($_SERVER, 'HTTP_REFERER', $this->config('site_url')));
+			}
+			if(($sessionToken['form'] != $data->form) || ($sessionToken['time'] != $data->time)){
+				$this->redirect(Vars::getFrom($_SERVER, 'HTTP_REFERER', $this->config('site_url')));
+			}
+			if(!$form = Loader::get($data->form)) return false;
+				
+			$response = $form->action();
+			if(is_object($response) && get_class($response) == 'JFrame\Response'){
+				$return = ($r = $response->get('return')) ? $r : $this->config('site_url');
+				$this->session->set('flashMessage', $response);
+				$this->redirect($return);
+			}else{
+				$this->redirect($this->config('site_url'));
+			}
+		}
+		
 		
 		public static function instance($app=null){
 			if($app===null){
@@ -105,40 +174,6 @@ namespace JFrame{
 			return false;
 		}
 		
-		public function init(){
-			$this->initialized = true;
-			// makde sure application path exists
-			if(!is_dir($this->config['path'])){
-				if($this->config['debug']) echo 'Application path not found: ' . $this->config['path'];
-				exit;
-			}
-			
-			// change directories to application path
-			chdir($this->config['path']);
-			// process form submission
-			$this->processForm();
-			// route to controller
-			$router = new Router($this);
-			if(!$route = $router->route()){
-				die('404 not found');
-			}
-			$this->dispatchEvent('Router.Route', array('route'=>$route));
-			
-			$namespace = $route->get('module');
-			
-			if($controller = $route->get('controller')){
-				$ctrlResponse = false;
-				$this->route = $route;
-				$ctrlClass = "$namespace\Controller\\$controller";
-				if($ctrl = Loader::get($ctrlClass)){
-					if($callback = $route->get('callback')){
-						if(is_callable("$ctrlClass::$callback")){
-							$ctrlResponse = $ctrl->{$callback}();
-						}
-					}
-				}
-			}
-		}
 		
 		public function getModuleByAlias($alias){
 			foreach($this->modules as $module){
@@ -259,6 +294,13 @@ namespace JFrame{
 				}
 				$this->config['modules'] = $modules;
 			}
+			
+			// makde sure application path exists
+			if(!is_dir($this->config['path'])){
+				if($this->config('debug')) echo 'Application path not found: ' . $this->config['path'];
+				exit;
+			}
+			
 			// load modules
 			if(is_array($this->config['modules'])){
 				foreach($this->config['modules'] as $module){
@@ -315,47 +357,11 @@ namespace JFrame{
 		}
 		
 		public function redirect($url){
+			$file = fopen('log/log.txt', 'a+');
+			fwrite($file, time()  . ' | Redirect' . chr(10));
+			fclose($file);
 			header("Location: $url");
 			exit;
-		}
-		
-		private function processForm(){
-			$encKey = ($k = $this->config('enc_key')) ? $k : ' ';
-			$tokenName = md5($this->config('hash') . 'submit');
-			if(!$tokenValue = Vars::get($tokenName)) return false;
-			$json = Util::decrypt($encKey, $tokenValue);
-			if(!$data = json_decode($json)) return false;
-			$formTimeout = $this->config('form_timeout');
-			
-			if($formTimeout && is_numeric($formTimeout)){
-				$timeLapsed = time() - $data->time;
-				$maxTime = $formTimeout * 60;
-				// make sure the form has not lapsed
-				if($timeLapsed > $maxTime){
-					$this->redirect(Vars::getFrom($_SERVER, 'HTTP_REFERER', $this->config('site_url')));
-				}
-			}
-			
-			// make sure session variable matches what is submitted
-			$sessionKey = md5($data->form);
-			if(!$sessionToken = $this->session->get("token.form.$sessionKey")){
-				$this->redirect(Vars::getFrom($_SERVER, 'HTTP_REFERER', $this->config('site_url')));
-			}
-			if(($sessionToken['form'] != $data->form) || ($sessionToken['time'] != $data->time)){
-				$this->redirect(Vars::getFrom($_SERVER, 'HTTP_REFERER', $this->config('site_url')));
-			}
-			if(!$form = Loader::get($data->form)) return false;
-			
-			$response = $form->action();
-
-			if(is_object($response) && get_class($response) == 'JFrame\Response'){
-				$return = ($r = $response->get('return')) ? $r : $this->config('site_url');
-				$this->session->set('flashMessage', $response);
-				$this->redirect($return);
-			}else{
-				return;
-				$this->redirect($this->config('site_url'));
-			}
 		}
 	}
 	
