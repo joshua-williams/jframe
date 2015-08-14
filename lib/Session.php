@@ -37,12 +37,12 @@ namespace JFrame{
 		private function session_id(){
 			$hash = $this->app->config('hash');
 			$timeout = $this->app->config('session_timeout');
-			if(!isset($_COOKIE[$this->session_name()])){
-				$session_id = md5($hash . microtime(true));
+			if(isset($_COOKIE[$this->session_name()])){
+				$session_id = $_COOKIE[$this->session_name()];
 				setcookie($this->session_name(), $session_id, time() + ($timeout * 60), '/');
 				return $session_id;
 			}else{
-				$session_id = $_COOKIE[$this->session_name()];
+				$session_id = md5($hash . microtime(true));
 				setcookie($this->session_name(), $session_id, time() + ($timeout * 60), '/');
 				return $session_id;
 			}
