@@ -186,12 +186,14 @@ namespace JFrame{
 		private $type;
 		private $label;
 		private $value;
+		private $options;
 		private $attributes = array();
 		
 		function __construct(Array $prop){
 			$this->type = Vars::getFrom($prop, 'type');
 			$this->label = Vars::getFrom($prop, 'label');
 			$this->value = Vars::getFrom($prop, 'value');
+			$this->options = Vars::getFrom($prop, 'options');
 			foreach($prop as $attr=>$val){
 				if($attr === 'type') continue;
 				$this->attr($attr, $val);
@@ -234,12 +236,26 @@ namespace JFrame{
 				case 'submit':
 				case 'radio': return $this->renderText(); break;
 				case 'textarea': return $this->renderTextArea(); break;
+				case 'dropdown': return $this->renderDropdown(); break;
 			}
 		}
 		
 		function isValid(){
-			$fieldTypes = array('text','password','number','textarea','radio','checkbox','file','hidden','submit');
+			$fieldTypes = array('text','password','number','textarea','radio','checkbox','dropdown', 'file','hidden','submit');
 			if(!in_array($this->type, $fieldTypes)) return false;
+			if($this->type == 'dropdown'){
+				if(!$this->options || !is_array($this->options)) return false;
+				$options = array();
+				foreach($this->options as $option){
+					if(!isset($option['value']) && !isset($option['label'])) continue;
+					$o['value'] = Vars::getFrom($option,'value', $option['label']);
+					$o['label'] = Vars::getFrom($option, 'label', $option['value']);
+					$o['selected'] = Vars::getFrom($option, 'selected');
+					$options[] = $o;
+				}
+				if(!$options) return false;
+				$this->options = $options;
+			}
 			return true;
 		}
 		
@@ -268,7 +284,14 @@ namespace JFrame{
 			return "<textarea " . $this->renderAttributes() . ">" . $this->renderValue() . "</textarea>";
 		}
 		
-		
+		private function renderDropdown(){
+			$html = "<select " . $this->renderAttributes() . ">";
+			foreach($this->options as $option){
+				$html.= "<option value='" . $option['value'] . "'>" . $option['label'] . "</option>";
+			}
+			$html.="</select>";
+			return $html;
+		}
 	}
 }
 ?>
