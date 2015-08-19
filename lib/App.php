@@ -278,7 +278,7 @@ namespace JFrame{
 			// merge user defined config into application config overriding static config
 			foreach($config as $key=>$val){
 				if(!isset($this->config[$key])) continue;
-				if(!is_numeric($config[$key]) && !is_string($config[$key]) && !is_bool($config[$key])) continue;
+				if($ke=='modules' && !is_numeric($config[$key]) && !is_string($config[$key]) && !is_bool($config[$key])) continue;
 				$this->config[$key] = $val;
 			}
 			// without any modules defined the application can do nothing so die.

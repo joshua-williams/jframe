@@ -1,13 +1,13 @@
 <?php
 
-	namespace Site\Controller{
+namespace Site\Controller{
+	
+	class Site extends \JFrame\Controller{
 		
-		class Site extends \JFrame\Controller{
-			
-			function index(){
-			
-			}
+		function index(){
+			echo $this->view->render('index.phtml');
 		}
 	}
+}
 
 ?>
