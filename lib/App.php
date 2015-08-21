@@ -309,17 +309,22 @@ namespace JFrame{
 				}
 			}
 			
-			// route settings
-			if(isset($config['routes']) && is_array($config['routes'])){
-				foreach($config['routes'] as $route){
-					$this->addRoute($route);
-				}
-			}
-			$routePath = $this->config['path'] . DS . 'config' . DS . 'routes.php';
-			if(is_file($routePath)){
-				if(($routes = include($routePath)) && (is_array($routes))){
-					foreach($routes as $route){
+			// if routes are defined in user config it will load those routes
+			// $config[routes] could equal false then can be added with $app->addRoute before $app->init method is called
+			if(isset($config['routes'])){
+				if(is_array($config['routes'])){
+					foreach($config['routes'] as $route){
 						$this->addRoute($route);
+					}
+				}
+			}else{
+				// if $config[routes] are not set it will try to load from config/routes.php
+				$routePath = $this->config['path'] . DS . 'config' . DS . 'routes.php';
+				if(is_file($routePath)){
+					if(($routes = include($routePath)) && (is_array($routes))){
+						foreach($routes as $route){
+							$this->addRoute($route);
+						}
 					}
 				}
 			}
