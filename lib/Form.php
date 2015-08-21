@@ -164,7 +164,7 @@ namespace JFrame{
 			$this->attributes['action'] = App::instance()->config('site_url');
 			
 			foreach($this->attributes as $key=>$val){
-				$attributes[] = $key . '="' . addslashes($val) . '"';
+				$attributes[] = $key . '="' . str_replace('"','\\"', $val) . '"';
 			}
 			
 			return implode(' ', $attributes);
@@ -266,7 +266,7 @@ namespace JFrame{
 		private function renderAttributes(){
 			$attributes = array();
 			foreach($this->attributes as $key=>$val){
-				$attributes[] = $key . '="' . addslashes($val) . '"';
+				$attributes[] = $key . '="' . str_replace('"','\\"', $val) . '"';
 			}
 			return implode(' ', $attributes);
 		}
