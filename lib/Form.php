@@ -63,7 +63,7 @@ namespace JFrame{
 			}
 		}
 		
-		public function getField($name){
+		public function getField($name=null){
 			$this->loadFields();
 			if(!is_string($name)) return false;
 			foreach($this->fields as $field){
@@ -71,8 +71,12 @@ namespace JFrame{
 			}
 			return false;
 		}
-		
-		public function getFields(Array $names){
+		/**
+		 * @param string $names An array of field names. Will return FormFields who's name matches.
+		 * @return If name param is not passed will return array of FormField objects. If name matches a FormField name attribute will return FormField or false.
+		 */
+		public function getFields(Array $names = array()){
+			if(!$names) return $this->fields;
 			foreach($names as $name){
 				$field = $this->getField($name);
 				if($field) $fields[] = $field;
@@ -241,7 +245,7 @@ namespace JFrame{
 		}
 		
 		function isValid(){
-			$fieldTypes = array('text','password','number','textarea','radio','checkbox','dropdown', 'file','hidden','submit');
+			$fieldTypes = array('text','email','password','number','textarea','radio','checkbox','dropdown', 'file','hidden','submit');
 			if(!in_array($this->type, $fieldTypes)) return false;
 			if($this->type == 'dropdown'){
 				if(!$this->options || !is_array($this->options)) return false;
