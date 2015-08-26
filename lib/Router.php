@@ -10,7 +10,7 @@ namespace JFrame{
 		function __construct($app){
 			$this->app = $app;
 			$this->method = strtolower($_SERVER['REQUEST_METHOD']);
-			$this->uri = trim($_SERVER['REQUEST_URI'], '/');
+			$this->uri = preg_replace('/\?.*$/', '', trim($_SERVER['REQUEST_URI'], '/'));
 		}
 		public function route(){
 			if($route = $this->resolveStaticRoutes()) return $route;
@@ -30,13 +30,11 @@ namespace JFrame{
 				$_segments = explode('/', trim($r['uri'], '/'));
 				// make sure route method property matches request method
 				$method = strtolower(Vars::getFrom($r, 'method', 'get'));
-				
 				if(($method != '*') && $this->method !== $method){ continue;}
 				
 				if(count($segments) != count($_segments)) continue;
 				
 				for($a=0, $b=0; $a<count($segments); $a++){
-					//if($r['uri'] != 'account/save') continue 2;
 					
 					$seg = $segments[$a];
 					$_seg = $_segments[$a];
