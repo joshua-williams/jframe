@@ -61,10 +61,10 @@ namespace JFrame{
 				case 'password':
 				case 'hidden':
 				case 'file':
-				case 'submit':
-				case 'radio': return $this->renderText(); break;
+				case 'submit': return $this->renderText(); break;
 				case 'textarea': return $this->renderTextArea(); break;
 				case 'dropdown': return $this->renderDropdown(); break;
+				case 'radio': return $this->renderRadio(); break;
 			}
 		}
 	
@@ -110,6 +110,16 @@ namespace JFrame{
 	
 		private function renderTextarea(){
 			return "<textarea " . $this->renderAttributes() . ">" . $this->renderValue() . "</textarea>";
+		}
+		
+		private function renderRadio(){
+			$html = '';
+			$name = $this->attr('name');
+			foreach($this->options as $o){
+				$value = $o['value']; $label = $o['label'];
+				$html.="<input type='radio' value='$value' name='$name'> <span>$label</span>";
+			}
+			return $html;
 		}
 	
 		private function renderDropdown(){
