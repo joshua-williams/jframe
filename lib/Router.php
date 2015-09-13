@@ -25,7 +25,6 @@ namespace JFrame{
 			foreach($routes as $r){
 				if(DEFINED('DEBUG_ROUTER')) echo $r['uri'] . '<br>';
 				$validate = Vars::getFrom($r, 'validate');
-				$validationFormat;
 				$variables = array();
 				$_segments = explode('/', trim($r['uri'], '/'));
 				// make sure route method property matches request method
@@ -35,29 +34,29 @@ namespace JFrame{
 				if(count($segments) != count($_segments)) continue;
 				
 				for($a=0, $b=0; $a<count($segments); $a++){
-					
 					$seg = $segments[$a];
 					$_seg = $_segments[$a];
 					if(preg_match('/:(\w+)/', $_seg, $match)){
-						if(!$validate) continue 2;
-						if(is_string($validate)){
-							$validationFormat = 'string';
-							$regex = $validate;
-						}elseif(is_array($validate)){
-							$validationFormat = 'array';
-							if(!isset($validate[$b])) continue 2;
-							$regex = $validate[$b];
-						}else{
-							continue 2;
+						$b++;
+						if($validate){
+							if(is_string($validate)){
+								$regex = $validate;
+							}elseif(is_array($validate)){
+								if(!isset($validate[$b-1])) continue 2;
+								$regex = $validate[$b-1];
+							}else{
+								continue 2;
+							}
+							$pattern = "/$regex/";
+							if(!preg_match($pattern, $seg)) continue 2;
 						}
 						$varName = $match[1];
-						$pattern = "/$regex/";
-						if(!preg_match($pattern, $seg)) continue 2;
 						$variables[$varName] = $seg;
 					}else{
 						if($seg != $_seg) continue 2;
 					}
 				}
+				
 				foreach($variables as $key=>$val){
 					Vars::set($key, $val);
 				}
