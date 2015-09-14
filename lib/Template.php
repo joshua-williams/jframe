@@ -101,6 +101,9 @@ namespace JFrame{
 				if(!isset($this->paths[$match[1]])) return false;
 				$path = $this->paths[$match[1]] . DS . preg_replace($pattern, '', $view);
 				if(!is_file($path)) return false;
+				foreach($this->variables as $key=>$val){
+					${$key} = $val;
+				}
 				ob_start();
 				include($path);
 				return ob_get_clean();
@@ -108,6 +111,9 @@ namespace JFrame{
 				foreach($this->paths['default'] as $path){
 					$viewPath = $path . DS . $view;
 					if(file_exists($viewPath)){
+						foreach($this->variables as $key=>$val){ 
+							${$key} = $val;
+						}
 						ob_start();
 						include($viewPath);
 						return ob_get_clean();
