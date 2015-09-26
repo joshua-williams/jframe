@@ -6,11 +6,24 @@ namespace JFrame{
 		private $app;
 		private $method;
 		private $uri;
+		private $segments;
 		
 		function __construct($app){
 			$this->app = $app;
 			$this->method = strtolower($_SERVER['REQUEST_METHOD']);
 			$this->uri = preg_replace('/\?.*$/', '', trim($_SERVER['REQUEST_URI'], '/'));
+			$offset = $app->config('segment_offset');
+			$segments = explode('/', $this->uri);
+			
+			if($offset && is_numeric($offset)){
+				while($offset > 0){
+					if(!$segments) break;
+					array_shift($segments);
+					$offset--;
+				}
+			}
+			if($segments && !$segments[0]) array_shift($segments); // home page
+			$this->segments = $segments;
 		}
 		public function route(){
 			if($route = $this->resolveStaticRoutes()) return $route;
@@ -22,6 +35,7 @@ namespace JFrame{
 			$routes = $this->app->get('routes');
 			$modules = $this->app->get('modules');
 			$segments = explode('/', trim($this->uri, '/'));
+			
 			foreach($routes as $r){
 				if(DEFINED('DEBUG_ROUTER')) echo $r['uri'] . '<br>';
 				$validate = Vars::getFrom($r, 'validate');
@@ -31,10 +45,10 @@ namespace JFrame{
 				$method = strtolower(Vars::getFrom($r, 'method', 'get'));
 				if(($method != '*') && $this->method !== $method){ continue;}
 				
-				if(count($segments) != count($_segments)) continue;
+				if(count($this->segments) != count($_segments)) continue;
 				
-				for($a=0, $b=0; $a<count($segments); $a++){
-					$seg = $segments[$a];
+				for($a=0, $b=0; $a<count($this->segments); $a++){
+					$seg = $this->segments[$a];
 					$_seg = $_segments[$a];
 					if(preg_match('/:(\w+)/', $_seg, $match)){
 						$b++;
@@ -81,36 +95,33 @@ namespace JFrame{
 			 * MATCH SEGMENT 1 TO DEFAULT MO
 			 * segment 1 == module alias
 			 */
-			$segment = explode('/', trim($this->uri, '/'));
-			switch(count($segment)){
-				case 1:
-					if($segment[0]){
-						
-						if(!$module = $this->app->getModuleByAlias($segment[0])){
-							if(!$module = $this->app->getDefaultModule()) return false;
-						}
-						return new Route(array(
-							'module' => $module->get('namespace'),
-							'controller' => $module->get('defaultController'),
-							'callback' => $segment[0],
-						));
-					}else{
-						// if segment 1 is empty (home page)
-						if(!$defaultModule) return false;
-						if(!isset($modules[$defaultModule])) return false;
-						$module = $modules[$defaultModule];
-						if(!$ctrl = $module->get('defaultController')){
-							$ctrl = $module->get('namespace');
-						}
-						$route = new Route(array(
-							'module' => $module->get('namespace'),
-							'controller' => $ctrl,
-							'callback' => 'index',
-							'view' => "index.$ext",
-						));
-						return $route;
+			switch(count($this->segments)){
+				case 0:
+					if(!$defaultModule) return false;
+					if(!isset($modules[$defaultModule])) return false;
+					$module = $modules[$defaultModule];
+					if(!$ctrl = $module->get('defaultController')){
+						$ctrl = $module->get('namespace');
 					}
-					break;
+					$route = new Route(array(
+						'module' => $module->get('namespace'),
+						'controller' => $ctrl,
+						'callback' => 'index',
+						'view' => "index.$ext",
+					));
+					return $route;
+				break;
+				
+				case 1:
+					if(!$module = $this->app->getModuleByAlias($this->segments[0])){
+						if(!$module = $this->app->getDefaultModule()) return false;
+					}
+					return new Route(array(
+						'module' => $module->get('namespace'),
+						'controller' => $module->get('defaultController'),
+						'callback' => $this->segments[0],
+					));
+				break;
 			}
 			return false;
 		}
