@@ -61,10 +61,11 @@ namespace JFrame{
 			if(!$route = $router->route()){
 				die('404 not found');
 			}
+			
 			$this->dispatchEvent('Router.Route', array('route'=>$route));
 				
 			$namespace = $route->get('module');
-				
+			
 			if($controller = $route->get('controller')){
 				$ctrlResponse = false;
 				$this->route = $route;

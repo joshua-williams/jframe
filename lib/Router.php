@@ -13,7 +13,7 @@ namespace JFrame{
 			$this->method = strtolower($_SERVER['REQUEST_METHOD']);
 			$this->uri = preg_replace('/\?.*$/', '', trim($_SERVER['REQUEST_URI'], '/'));
 			$offset = $app->config('segment_offset');
-			$segments = explode('/', $this->uri);
+			$segments = explode('/', trim($this->uri, '/'));
 			
 			if($offset && is_numeric($offset)){
 				while($offset > 0){
@@ -35,16 +35,18 @@ namespace JFrame{
 			$routes = $this->app->get('routes');
 			$modules = $this->app->get('modules');
 			$segments = explode('/', trim($this->uri, '/'));
-			
+
 			foreach($routes as $r){
-				if(DEFINED('DEBUG_ROUTER')) echo $r['uri'] . '<br>';
 				$validate = Vars::getFrom($r, 'validate');
 				$variables = array();
 				$_segments = explode('/', trim($r['uri'], '/'));
 				// make sure route method property matches request method
 				$method = strtolower(Vars::getFrom($r, 'method', 'get'));
+				if(DEFINED('DEBUG_ROUTER')){
+					echo "<div><b>{$r['uri']} </b>";
+					echo count($this->segments). ' | ' . count($_segments).'<br>';
+				}
 				if(($method != '*') && $this->method !== $method){ continue;}
-				
 				if(count($this->segments) != count($_segments)) continue;
 				
 				for($a=0, $b=0; $a<count($this->segments); $a++){
@@ -70,7 +72,6 @@ namespace JFrame{
 						if($seg != $_seg) continue 2;
 					}
 				}
-				
 				foreach($variables as $key=>$val){
 					Vars::set($key, $val);
 				}
