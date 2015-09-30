@@ -54,6 +54,11 @@ namespace JFrame{
 		public static function generateKey($max_length=20){
 			return ($random = substr(md5(rand()),0,$max_length));
 		}
+		
+		public static function str2alias($str){
+			if(!is_string($str)) return false;
+			return preg_replace('/[\-]+/', '-', preg_replace('/[^0-9a-zA-Z]/', '-', $str));
+		}
 	}
 }
 
