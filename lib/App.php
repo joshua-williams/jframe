@@ -3,16 +3,21 @@
 namespace JFrame{
 	if(!defined('DS')) define('DS', DIRECTORY_SEPARATOR);
 	if(!defined('PATH_JFRAME')) define('JFRAME_PATH', dirname(__DIR__));
-	
-	// autoload jframe library
+
 	require_once(__DIR__ . DS . 'Util.php');
 	spl_autoload_register(function($class){
+        // autoload jframe library
 		if(preg_match('/^JFrame/', $class)){
 			$path = preg_replace('/^JFrame\\\/', '', $class);
 			$path = __DIR__ . DS . Util::path($path) . '.php';
 			if(!file_exists($path)) return;
 			require_once($path);
-		}
+		}else{
+            // autoload module class
+            $path = getcwd() . DS . 'modules' . DS . Util::path($class) . '.php';
+            if(!file_exists($path)) return;
+            require_once($path);
+        }
 	});
 	
 	class App{
