@@ -2,6 +2,7 @@
 /**
  * the following example will create a new service
  * jframe addmodel -namespace Demo/Model -class Product
+ * 
  * to create multiple services
  * jframe addmodel -namespace Demo/Model -alass "Product Customer Order"
  * the above will crate a Product, Customer, and Order php files

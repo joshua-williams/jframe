@@ -1,9 +1,9 @@
 <?php 
+
 /**
  *  example usage
- *  jframe addmodel -classname "Namespace\Model\Products
+ *  jframe addmodel -namespace Demo/Model -class "Namespace\Model\Products
  */
-
 
 if(!is_file('./config/databases.php')) $this->setError('Please run command from project root');
 use \JFrame\Util;
@@ -18,60 +18,69 @@ if(!is_array($config) || !isset($config['default'])) $this->setError('Please set
 $db = new \JFrame\DB($config['default']);
 if(!$db->has_connection) $this->setError('Failed to connect to database');
 
-$className = ($mod = $this->opt('classname')) ? $mod : $this->getResponse('Please enter fully qualified class name');
-$tableName = ($mod = $this->opt('tablename')) ? $mod : $this->getResponse('Please enterdatabase table name');
-$defaultValue = ($mod = $this->opt('default')) ? $mod : $this->getResponse('Please enter default values or leave empty for none');
+$ns = ($ns = $this->opt('namespace')) ? $ns : $this->getResponse('namespace');
 
-$dirPath = getcwd() . dirname(Util::path('/modules/' . $className));
-$namespace = dirname(Util::path($className));
-$class = basename(Util::path($className));
-$scriptName = $class . '.php';
-if(!is_dir($dirPath)) $this->setError('Path not found: ' . $dirPath);
-if(file_exists("$dirPath/$scriptName")){
-	$override = $this->getResponse("Model file already exists: $dirPath/$scriptName".PHP_EOL. 'Do you want to override it? [y/n]');
-	if(!$override) exit;
-}
+if(!is_dir(Util::path("modules/$ns"))) $this->setError("Namespace path not found $ns");
 
+$ns = str_replace('/','\\', $ns);
+$class = ($class = $this->opt('classname')) ? $class : $this->getResponse("classname; for multiple classnames seperate with space");
 $databaseName = $db->loadResult("select database()");
 $tables = $db->loadAssocList("SHOW TABLES");
-$tableData = false;
 
-foreach($tables as $table){
-	if($table["Tables_in_$databaseName"] == $tableName){
-		$tableData = $db->loadObjectList("DESC $tableName");
-		break;
+foreach(explode(' ', $class) as $cls){
+	$cls = trim($cls);
+	if(!$cls) continue;
+	$scriptPath = Util::path('modules/' . $ns . '/' . $cls . '.php');
+	if(file_exists($scriptPath)){
+		$override = $this->getResponse("{$cls}.php already exists. Override? [y/n]");
+		if($override == 'n') continue;
+		if($override != 'y' && $override !='yes') continue;
 	}
-}
 
-if(!$tableData) $this->setError("table $tableName does not exist in $databaseName");
-
-$namespace = str_replace('/', '\\', $namespace);
-$class = str_replace('/','\\', $class);
-switch(trim($defaultValue)){
-	case "false": $value = " = false"; break;
-	case "null": $value = " = null"; break;
-	case "": $value = ""; break;
-	default: $value = " = '$defaultValue'";
-}
-$txt = "<?php
-
-namespace $namespace{
+	$tableData = false;
+	$tableName = ($tableName = $this->opt('table')) ? $tableName : $this->getResponse('table name for ' . $cls);
 	
-	class $class extends \JFrame\Model{
+	foreach($tables as $table){
+		if($table["Tables_in_$databaseName"] == $tableName){
+			$tableData = $db->loadObjectList("DESC $tableName");
+			break;
+		}
+	}
+	
+	if(!$tableData){
+		$this->write("table $tableName does not exist in $databaseName");
+		continue;
+	}
+	
+	$ns = str_replace('/', '\\', $ns);
+	$class = str_replace('/','\\', $class);
+	$defaultValue = $this->getResponse("property default values. leave blank for none");
+	switch(trim($defaultValue)){
+		case "false": $value = " = false"; break;
+		case "null": $value = " = null"; break;
+		case "": $value = ""; break;
+		default: $value = " = '$defaultValue'";
+	}
+	$txt = "<?php
+	
+	namespace $ns{
+	
+	class $cls extends \JFrame\Model{
 ";
-foreach($tableData as $data){
-	$txt.=chr(9).chr(9) . "protected $$data->Field{$value};".chr(10);
-}
-$txt.="
+	foreach($tableData as $data){
+		$txt.=chr(9).chr(9) . "protected $$data->Field{$value};".chr(10);
+	}
+	$txt.="
 	}
 }
-
+	
 ?>";
+	$file = fopen($scriptPath, "w");
+	fwrite($file, $txt);
+	fclose($file);
+	
+	$this->write("$cls model has been created");
+	
 
-$file = fopen("$dirPath/$scriptName", "w");
-fwrite($file, $txt);
-fclose($file);
+}
 
-$this->write("$className model has been created");
-
-?>
