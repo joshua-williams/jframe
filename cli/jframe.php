@@ -1,4 +1,4 @@
-#! /usr/bin/php5
+#! /usr/bin/env php
 <?php
 DEFINE('PATH_JFRAME', dirname(__DIR__));
 require_once(PATH_JFRAME . '/lib/CLI.php');
@@ -11,6 +11,14 @@ class CLI extends \JFrame\CLI{
 	
 	function addmodule(){
 		require_once(PATH_JFRAME . '/cli/addmodule.php');
+	}
+	
+	function addmodel(){
+		require_once(PATH_JFRAME . '/cli/addmodel.php');
+	}
+	
+	function addservice(){
+		require_once(PATH_JFRAME . '/cli/addservice.php');
 	}
 	
 	public function dbsetup(){
