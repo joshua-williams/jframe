@@ -55,9 +55,9 @@ namespace JFrame{
 			return ($random = substr(md5(rand()),0,$max_length));
 		}
 		
-		public static function str2alias($str){
+		public static function str2alias($str, $seperator='-'){
 			if(!is_string($str)) return false;
-			return preg_replace('/[\-]+/', '-', preg_replace('/[^0-9a-zA-Z]/', '-', $str));
+			return preg_replace('/[\-]+/', $seperator, preg_replace('/[^0-9a-zA-Z]/', $seperator, $str));
 		}
 	}
 }
