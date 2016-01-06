@@ -153,6 +153,7 @@ namespace JFrame{
 		}
 		
 		private function renderAttributes(){
+			$app = App::instance();
 			$attributes = array();
 			// automatically set the enctype if file form field exists and if not enctype is not explicitly defined
 			if($this->hasFile() && !isset($this->attributes['enctype'])){
@@ -161,8 +162,8 @@ namespace JFrame{
 			// set default method as post if not explicitly defined
 			if(!isset($this->attributes['method'])) $this->attributes['method'] = 'post';
 			// set the action to the site url
-			$this->attributes['action'] = App::instance()->config('site_url');
-			
+			$this->attributes['action'] = $app->config('site_url');
+			if($app->config('segment_offset')) $this->attributes['action'] .= '/index.php';
 			foreach($this->attributes as $key=>$val){
 				$attributes[] = $key . '="' . str_replace('"','\\"', $val) . '"';
 			}
