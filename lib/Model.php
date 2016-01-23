@@ -41,7 +41,8 @@ namespace JFrame{
 			$this->{$property} = $value;
 		}
 		
-		public function properties(){
+		public function properties($object=false){
+			if($object) return (object) get_object_vars($this);
 			return get_object_vars($this);
 		}
 	}
