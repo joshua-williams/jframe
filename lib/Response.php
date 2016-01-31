@@ -121,6 +121,15 @@ namespace JFrame{
 			}
 			return $this;
 		}
+		
+		public function json(){
+			return json_encode(array(
+				'errors' => $this->errors,
+				'warnings' => $this->warnings,
+				'messages' => $this->messages,
+				'successes' => $this->successes
+			));
+		}
 	}
 }
 ?>
