@@ -64,7 +64,8 @@ namespace JFrame{
 			// route to controller
 			$router = new Router($this);
 			if(!$route = $router->route()){
-				die('404 not found');
+				header("HTTP/1.0 404 Not Found");
+				exit;
 			}
 			
 			$this->dispatchEvent('Router.Route', array('route'=>$route));
