@@ -6,18 +6,18 @@ namespace JFrame{
 
 	require_once(__DIR__ . DS . 'Util.php');
 	spl_autoload_register(function($class){
-        // autoload jframe library
+		// autoload jframe library
 		if(preg_match('/^JFrame/', $class)){
 			$path = preg_replace('/^JFrame\\\/', '', $class);
 			$path = __DIR__ . DS . Util::path($path) . '.php';
 			if(!file_exists($path)) return;
 			require_once($path);
 		}else{
-            // autoload module class
-            $path = getcwd() . DS . 'modules' . DS . Util::path($class) . '.php';
-            if(!file_exists($path)) return;
-            require_once($path);
-        }
+			// autoload module class
+			$path = getcwd() . DS . 'modules' . DS . Util::path($class) . '.php';
+			if(!file_exists($path)) return;
+			require_once($path);
+		}
 	});
 	
 	class App{
@@ -85,7 +85,7 @@ namespace JFrame{
 				}
 			}
 		}
-
+		
 		private function processForm(){
 			$encKey = ($k = $this->config('enc_key')) ? $k : ' ';
 			$tokenName = md5($this->config('hash') . 'submit');
@@ -139,10 +139,15 @@ namespace JFrame{
 				return false;
 			}
 			if($this->moduleLoaded($namespace)) return false;
-			$modDir = $this->config['path'] . DS . 'modules' . DS . $namespace;
-			if(!is_dir($modDir)){
+			$modDir = false;
+			foreach($this->config['module_path'] as $modulePath){
+				$modDir = $modulePath . DS . $namespace;
+				if(is_dir($modDir)) break;
+				$modDir = false;
+			}
+			if(!($modDir)){
 				if($this->config('debug')){
-					die("Module directory not found: $modDir");
+					die("Module directory not found: $namespace");
 				}
 				exit;
 			}
@@ -258,6 +263,7 @@ namespace JFrame{
 			$this->config = array(
 				'debug' => false,
 				'path' => rtrim(dirname(getcwd())),
+				'module_path' => array(),
 				'application' => Vars::getFrom($_SERVER, 'HTTP_HOST', 'Application'),
 				'site_url' => false,
 				'site_url_ssl' => false,
@@ -278,7 +284,7 @@ namespace JFrame{
 			if(is_array($cnf)){
 				foreach($this->config as $key=>$val){
 					if(!isset($cnf[$key])) continue;
-					if(!is_numeric($cnf[$key]) && !is_string($cnf[$key]) && !is_bool($cnf[$key])) continue;
+					if(!is_array($cnf[$key]) && !is_numeric($cnf[$key]) && !is_string($cnf[$key]) && !is_bool($cnf[$key])) continue;
 					$this->config[$key] = $cnf[$key];
 				}
 			}
@@ -295,6 +301,7 @@ namespace JFrame{
 				}
 				$this->config[$key] = $val;
 			}
+			
 			// without any modules defined the application can do nothing so die.
 			if(!$this->config['modules']){
 				if($this->config('debug')) echo "There are not modules defined in this application.";
@@ -314,7 +321,28 @@ namespace JFrame{
 				if($this->config('debug')) echo 'Application path not found: ' . $this->config['path'];
 				exit;
 			}
-			
+			// validate module path(s)
+			$defaultModulePath = Util::path($this->config['path'] .DS . 'modules');
+			$modulePath = array();
+			if(is_dir($defaultModulePath)) $modulePath[] = $defaultModulePath;
+			if(is_string($this->config['module_path'])){
+				if(!$modulePath[] = $this->modulePathExists($this->config['module_path'])){
+					if($this->config['debug']) die("Module path not found: {$this->config['module_path']}");
+					exit;
+				}
+			}elseif(is_array($this->config['module_path'])){
+				foreach($this->config['module_path'] as $path){
+					if(!is_string($path) && $this->config['debug']){
+						if($this->config['debug']) die("Module path must be string.<xmp>".print_r($path,1).'</xmp>');
+						continue;
+					}
+					if(!$modulePath[] = Util::path($this->modulePathExists($path))){
+						if($this->config['debug']) die("Module path not found: $path");
+						exit;
+					}
+				}
+				$this->config['module_path'] = $modulePath;
+			}
 			// load modules
 			if(is_array($this->config['modules'])){
 				foreach($this->config['modules'] as $module){
@@ -322,7 +350,6 @@ namespace JFrame{
 					$this->loadModule($module);
 				}
 			}
-			
 			// if routes are defined in user config it will load those routes
 			// $config[routes] could equal false then can be added with $app->addRoute before $app->init method is called
 			if(isset($config['routes'])){
@@ -342,6 +369,16 @@ namespace JFrame{
 					}
 				}
 			}
+		}
+		
+		private function modulePathExists($path){
+			if(preg_match('/^\//', $path)){
+				if(is_dir($path)) return $path;
+			}else{
+				$path = $this->config['path'] . DS . $path;
+				if(is_dir($path)) return $path;
+			}
+			return false;
 		}
 		/**
 		 * @desc Static routes will be overwritten by routes passed in application construct. This can be called on application instance before initialization.
