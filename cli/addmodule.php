@@ -1,16 +1,16 @@
 <?php 
 
 $module = ($mod = $this->opt('namespace')) ? $mod : $this->getResponse('Please enter module namespace');
-if(file_exists($module)) $this->setError('Module already exists');
-foreach(array(
-	$module,
-	$module . DS . 'Controller',
-	$module . DS . 'Service',
-	$module . DS . 'views'
-) as $dir){
-	mkdir($dir);
-}
+$dir = (is_dir('modules')) ? 'modules' : $this->getResponse("Please enter module path");
+if(!is_dir($dir)) $this->setError("$dir path does not exist.");
+if(file_exists($dir.DS.$module)) $this->setError('Module already exists at '.$dir);
 
+$dir = preg_replace('/\\$/', '', preg_replace('/\/$/','', $dir)) . DS . $module;
+
+
+foreach(array($dir, $dir.DS.'Controller', $dir.DS.'Service', $dir.DS.'views') as $directory){
+	mkdir($directory);
+}
 // ADD MODULE
 $content = "<?php
 namespace $module{
@@ -20,7 +20,8 @@ namespace $module{
 	}
 }
 ?>";
-$file = fopen("$module/Module.php", 'w');
+
+$file = fopen("$dir/Module.php", 'w');
 fwrite($file, $content);
 fclose($file);
 
@@ -36,7 +37,7 @@ namespace $module\Controller{
 	}
 }
 ?>";
-$file = fopen("$module/Controller/$module.php", 'w');
+$file = fopen($dir.DS."Controller".DS."$module.php", 'w');
 fwrite($file, $content);
 fclose($file);
 $this->write("$module has been created");
