@@ -5,19 +5,10 @@ namespace JFrame{
 	if(!defined('PATH_JFRAME')) define('JFRAME_PATH', dirname(__DIR__));
 
 	require_once(__DIR__ . DS . 'Util.php');
+	require_once(__DIR__ . DS . 'Loader.php');
+	Loader::addPath(__DIR__, 'JFrame');
 	spl_autoload_register(function($class){
-		// autoload jframe library
-		if(preg_match('/^JFrame/', $class)){
-			$path = preg_replace('/^JFrame\\\/', '', $class);
-			$path = __DIR__ . DS . Util::path($path) . '.php';
-			if(!file_exists($path)) return;
-			require_once($path);
-		}else{
-			// autoload module class
-			$path = getcwd() . DS . 'modules' . DS . Util::path($class) . '.php';
-			if(!file_exists($path)) return;
-			require_once($path);
-		}
+		return Loader::load($class);
 	});
 	
 	class App{
@@ -33,20 +24,6 @@ namespace JFrame{
 		private $viewPath = array('default'=>array());
 		
 		function __construct(Array $config = array()){
-			/* set view path(s)
-			if(isset($config['viewPath'])){
-				$path = $config['viewPath'];
-				if(is_string($path) && is_dir($path)){
-					$this->viewPath['default'][] = $path;
-				}elseif(is_array($path)){
-					foreach($path as $alias=>$p){
-						if(!is_dir($p)) continue;
-						if(preg_match('/[a-zA-Z0-9\_]+/', $alias)){
-							$this->viewPath[$alias] = $p;
-						}
-					}
-				}
-			}*/
 			$this->loadConfig($config);
 			chdir($this->config('path'));
 			$this->loadEvents();
@@ -139,38 +116,55 @@ namespace JFrame{
 				return false;
 			}
 			if($this->moduleLoaded($namespace)) return false;
+			
 			$modDir = false;
-			foreach($this->config['module_path'] as $modulePath){
-				$modDir = $modulePath . DS . $namespace;
-				if(is_dir($modDir)) break;
-				$modDir = false;
-			}
-			if(!($modDir)){
-				if($this->config('debug')){
-					die("Module directory not found: $namespace");
+			$namespaces = array_keys($this->config['module_path']);
+			if(in_array($namespace, $namespaces, true)){
+				$modDir = Util::path($this->config['module_path'][$namespace]);
+				$modPath = $modDir . DS . 'Module.php';
+				require_once($modPath);
+				if(!is_file($modPath)){
+					if($this->config['debug']) die("Custom module path not found: $modPath");
+					exit;
 				}
-				exit;
-			}
-			$modPath = $modDir . DS . 'Module.php';
-			if(!is_file($modPath)){
-				if($this->config('debug')){
-					die("Module path not found: $modPath");
+				$class = $namespace."\\Module";
+				$module = new $class;
+				$this->modules[$namespace] = $module;
+				Loader::addPath($modDir, $namespace);
+				return $module;
+			}else{
+				foreach($this->config['module_path'] as $ns=>$modulePath){
+					$modDir = $modulePath . DS . $namespace;
+					if(is_dir($modDir)) break;
+					$modDir = false;
 				}
-				exit;
-			}
-			require_once($modPath);
-			$class = "$namespace\Module";
-			if(!class_exists($class)){
-				if($this->config('debug')){
-					die("Module class not found $class");
+				if(!($modDir)){
+					if($this->config('debug')){
+						die("Module directory not found: $namespace");
+					}
+					exit;
 				}
-				exit;
+				$modPath = $modDir . DS . 'Module.php';
+				if(!is_file($modPath)){
+					if($this->config('debug')){
+						die("Module path not found: $modPath");
+					}
+					exit;
+				}
+				require_once($modPath);
+				$class = "$namespace\Module";
+				if(!class_exists($class)){
+					if($this->config('debug')){
+						die("Module class not found $class");
+					}
+					exit;
+				}
+				$module = new $class;
+				$this->modules[$namespace] = &$module;
+				// add modules directory to loader path
+				Loader::addPath($this->config['path'] . '/modules');
+				return $module;
 			}
-			$module = new $class;
-			$this->modules[$namespace] = &$module;
-			// add modules directory to loader path
-			Loader::addPath($this->config['path'] . '/modules');
-			return $module;
 		}
 
 		public function get($property, $default=null){
@@ -331,14 +325,19 @@ namespace JFrame{
 					exit;
 				}
 			}elseif(is_array($this->config['module_path'])){
-				foreach($this->config['module_path'] as $path){
+				foreach($this->config['module_path'] as $ns=>$path){
 					if(!is_string($path) && $this->config['debug']){
 						if($this->config['debug']) die("Module path must be string.<xmp>".print_r($path,1).'</xmp>');
 						continue;
 					}
-					if(!$modulePath[] = Util::path($this->modulePathExists($path))){
+					if(!$_path = Util::path($this->modulePathExists($path))){
 						if($this->config['debug']) die("Module path not found: $path");
 						exit;
+					}
+					if(is_numeric($ns)){
+						$modulePath[] = $_path;
+					}else{
+						$modulePath[$ns] = $_path;
 					}
 				}
 				$this->config['module_path'] = $modulePath;
