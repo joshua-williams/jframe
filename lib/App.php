@@ -54,6 +54,7 @@ namespace JFrame{
 				$this->route = $route;
 				$ctrlClass = "$namespace\Controller\\$controller";
 				if($ctrl = Loader::get($ctrlClass)){
+					$ctrl->view()->config('templateEngine', $this->config('template_engine'));
 					if($callback = $route->get('callback')){
 						if(is_callable("$ctrlClass::$callback")){
 							$ctrlResponse = $ctrl->{$callback}();
@@ -111,6 +112,7 @@ namespace JFrame{
 				}
 			}
 		}
+		
 		private function loadModule($namespace){
 			if(!is_string($namespace)){
 				return false;
