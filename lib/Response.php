@@ -10,7 +10,11 @@ namespace JFrame{
 		private $return;
 		
 		function __construct(Array $response = array()){
-			$this->return = isset($_SERVER['HTTP_REFERER'])? $_SERVER['HTTP_REFERER']: App::instance()->config('site_url');
+			if(isset($_SERVER['HTTP_REFERER'])){
+				$this->return = $_SERVER['HTTP_REFERER'];
+			}elseif($app = App::instance()){
+				$this->return = $app->config('site_url');
+			}
 			$this->set($response);
 		}
 		
