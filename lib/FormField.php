@@ -31,8 +31,9 @@ namespace JFrame{
 			return $this->label;
 		}
 	
-		public function value(){
-			return $this->attr('value');
+		public function value($value='NO_VALUE'){
+			if($value === 'NO_VALUE') $this->value;
+			$this->value = $value;
 		}
 	
 		public function attr($attr=null, $value='no_val'){
@@ -100,7 +101,7 @@ namespace JFrame{
 		}
 	
 		private function renderValue(){
-			return ($this->value) ? ' '.$this->value : '';
+			return ($this->value) ? ' value=\''.$this->value . '\'': '';
 		}
 	
 		private function renderText(){
