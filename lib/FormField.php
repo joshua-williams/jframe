@@ -110,7 +110,7 @@ namespace JFrame{
 		}
 	
 		private function renderTextarea(){
-			return "<textarea " . $this->renderAttributes() . ">" . $this->renderValue() . "</textarea>";
+			return "<textarea " . $this->renderAttributes() . ">" . $this->value . "</textarea>";
 		}
 		
 		private function renderRadio(){
