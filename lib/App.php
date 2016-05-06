@@ -35,7 +35,7 @@ namespace JFrame{
 			App::instance($this);
 			$this->session = new Session();
 			$this->session->start();
-			
+			$this->dispatchEvent('App.ProcessForm');
 			$this->processForm();
 			
 			// route to controller
@@ -197,6 +197,9 @@ namespace JFrame{
 		}
 		
 		private function loadEvents(){
+			$this->events['App'] = array(
+				'ProcessForm' => array(),
+			);
 			$this->events['Router'] = array(
 				'Route' => array()
 			);

@@ -126,7 +126,7 @@ namespace JFrame{
 		private function renderDropdown(){
 			$html = "<select " . $this->renderAttributes() . ">";
 			foreach($this->options as $option){
-				$html.= "<option value='" . $option['value'] . "'>" . $option['label'] . "</option>";
+				$html.= "<option value='" . $option['value'] . "'>" . $option['label'] . "</option>".chr(10);
 			}
 			$html.="</select>";
 			return $html;
