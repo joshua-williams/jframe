@@ -11,15 +11,26 @@ namespace JFrame{
 		private $value;
 		private $options;
 		private $attributes = array();
-	
+		private $parent = array();
+		
 		function __construct(Array $prop){
 			$this->type = Vars::getFrom($prop, 'type');
 			$this->label = Vars::getFrom($prop, 'label');
 			$this->value = Vars::getFrom($prop, 'value');
 			$this->options = Vars::getFrom($prop, 'options');
 			foreach($prop as $attr=>$val){
-				if($attr === 'type') continue;
-				$this->attr($attr, $val);
+				switch($attr){
+					case 'type': case 'label':  
+						break;
+					case 'parent':
+						if(!is_array($val)) continue;
+						foreach($val as $parentKey=>$parentVal){
+							if(is_array($parentVal) || is_object($parentVal)) continue;
+							$this->parent[$parentKey] = $parentVal;
+						}
+						break;
+					default: $this->attr($attr, $val);
+				}
 			}
 			//$attr = Vars::getFrom($prop, 'attr', Vars::getFrom($prop, 'attributes'));
 		}
@@ -35,7 +46,11 @@ namespace JFrame{
 			if($value === 'NO_VALUE') $this->value;
 			$this->value = $value;
 		}
-	
+		
+		public function parent(){
+			return $this->parent;
+		}
+		 
 		public function attr($attr=null, $value='no_val'){
 			if(!$attr) return $this->attributes;
 			if(is_string($attr)){

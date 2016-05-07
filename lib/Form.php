@@ -86,7 +86,7 @@ namespace JFrame{
 		
 		public function render(){
 			if(!$this->fieldsLoaded) $this->loadFields();
-			$html = "<form " . $this->renderAttributes() . ">".chr(10);
+			$html = "<form " . $this->renderFormAttributes() . ">".chr(10);
 			$html.= $this->renderHiddenFields();
 			$fields = array();
 			switch(strtolower($this->prop('type'))){
@@ -127,7 +127,10 @@ namespace JFrame{
 			$html = "<$tag>";
 			foreach($this->fields as $field){
 				if($field->type() == 'hidden') continue;
-				$html.="<li><label>" . $field->label() . "</label>" . $field->render() . "</li>";
+				//$parentAttributes = $this->renderAttributes($field->parent());
+				//if($parentAttributes) $parentAttributes =  ' ' . $parentAttributes;
+				$parentAttributes = ($parentAttributes = $this->renderAttributes($field->parent())) ? " $parentAttributes" : "";
+				$html.="<li$parentAttributes><label>" . $field->label() . "</label>" . $field->render() . "</li>";
 			}
 			return $html.="</$tag>";
 		}
@@ -152,7 +155,16 @@ namespace JFrame{
 			 return "<table>".chr(10) . "<tbody>" . chr(10) . $fields . "</tbody>" . chr(10) . "</table>";
 		}
 		
-		private function renderAttributes(){
+		private function renderAttributes(Array $source){
+			$attributes = array();
+			foreach($source as $key=>$val){
+				if(is_object($val) || is_array($val)) continue;
+				$attributes[] = $key . '="' . str_replace('"','\\"', $val) . '"';
+			}
+			return implode(' ', $attributes);
+		}
+		
+		private function renderFormAttributes(){
 			$app = App::instance();
 			$attributes = array();
 			// automatically set the enctype if file form field exists and if not enctype is not explicitly defined
