@@ -10,7 +10,7 @@ namespace JFrame{
 		private $label;
 		private $value;
 		private $options;
-		private $attributes = array();
+		private $attributes = array('value'=>false, 'class'=>false, 'name'=>false);
 		private $parent = array();
 		
 		function __construct(Array $prop){
@@ -116,7 +116,7 @@ namespace JFrame{
 		}
 	
 		private function renderValue(){
-			return ($this->value) ? ' value=\''.$this->value . '\'': '';
+			return ($this->attributes['value']) ? ' value=\''.$this->attributes['value'] . '\'': '';
 		}
 	
 		private function renderText(){
@@ -125,7 +125,7 @@ namespace JFrame{
 		}
 	
 		private function renderTextarea(){
-			return "<textarea " . $this->renderAttributes() . ">" . $this->value . "</textarea>";
+			return "<textarea " . $this->renderAttributes() . ">" . $this->attributes['value'] . "</textarea>";
 		}
 		
 		private function renderRadio(){
@@ -141,7 +141,8 @@ namespace JFrame{
 		private function renderDropdown(){
 			$html = "<select " . $this->renderAttributes() . ">";
 			foreach($this->options as $option){
-				$html.= "<option value='" . $option['value'] . "'>" . $option['label'] . "</option>".chr(10);
+				$selected = ($this->attributes['value'] === $option['value']) ? 'selected' : "";
+				$html.= "<option $selected value='" . $option['value'] . "'>" . $option['label'] . "</option>".chr(10);
 			}
 			$html.="</select>";
 			return $html;
