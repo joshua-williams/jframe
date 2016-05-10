@@ -20,8 +20,7 @@ namespace JFrame{
 			$this->options = Vars::getFrom($prop, 'options');
 			foreach($prop as $attr=>$val){
 				switch($attr){
-					case 'type': case 'label':  
-						break;
+					case 'type': case 'label': break;
 					case 'parent':
 						if(!is_array($val)) continue;
 						foreach($val as $parentKey=>$parentVal){
@@ -72,6 +71,7 @@ namespace JFrame{
 		}
 		
 		public function render(){
+			
 			switch($this->type){
 				case 'text':
 				case 'password':
@@ -95,6 +95,15 @@ namespace JFrame{
 					$o['value'] = Vars::getFrom($option,'value', $option['label']);
 					$o['label'] = Vars::getFrom($option, 'label', $option['value']);
 					$o['selected'] = Vars::getFrom($option, 'selected');
+					$o['attributes'] = array();
+					$attrs = Vars::getFrom($option, 'attributes');
+					if(is_array($attrs) || is_object($attrs)){
+						$attrs = (array) $attrs;
+						foreach($attrs as $key=>$val){
+							if(is_array($val) || is_object($val)) continue;
+							$o['attributes'][$key] = $val;
+						}
+					}
 					$options[] = $o;
 				}
 				if(!$options) return false;
@@ -103,9 +112,9 @@ namespace JFrame{
 			return true;
 		}
 	
-		private function renderAttributes(){
+		private function renderAttributes(Array $source = array()){
 			$attributes = array();
-			foreach($this->attributes as $key=>$val){
+			foreach($source as $key=>$val){
 				$attributes[] = $key . '="' . str_replace('"','\\"', $val) . '"';
 			}
 			return implode(' ', $attributes);
@@ -120,12 +129,12 @@ namespace JFrame{
 		}
 	
 		private function renderText(){
-			return "<input type='$this->type' " . $this->renderAttributes() . $this->renderValue() . "/>";
+			return "<input type='$this->type' " . $this->renderAttributes($this->attributes) . $this->renderValue() . "/>";
 				
 		}
 	
 		private function renderTextarea(){
-			return "<textarea " . $this->renderAttributes() . ">" . $this->attributes['value'] . "</textarea>";
+			return "<textarea " . $this->renderAttributes($this->attributes) . ">" . $this->attributes['value'] . "</textarea>";
 		}
 		
 		private function renderRadio(){
@@ -139,10 +148,14 @@ namespace JFrame{
 		}
 	
 		private function renderDropdown(){
-			$html = "<select " . $this->renderAttributes() . ">";
+			//echo '<xmp>'.print_r($this,1).'</xmp>';
+			$html = "<select " . $this->renderAttributes($this->attributes) . ">";
 			foreach($this->options as $option){
-				$selected = ($this->attributes['value'] === $option['value']) ? 'selected' : "";
-				$html.= "<option $selected value='" . $option['value'] . "'>" . $option['label'] . "</option>".chr(10);
+				$attributes = $this->renderAttributes($option['attributes']);
+				$attributes.= ($this->attributes['value'] === $option['value']) ? ' selected' : "";
+				
+				
+				$html.= "<option $attributes value='" . $option['value'] . "'>" . $option['label'] . "</option>".chr(10);
 			}
 			$html.="</select>";
 			return $html;
