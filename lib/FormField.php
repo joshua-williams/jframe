@@ -141,20 +141,18 @@ namespace JFrame{
 			$html = '';
 			$name = $this->attr('name');
 			foreach($this->options as $o){
+				$checked = ($this->attr('value') == $o['value']) ? 'checked':'';
 				$value = $o['value']; $label = $o['label'];
-				$html.="<input type='radio' value='$value' name='$name'> <span>$label</span>";
+				$html.="<input type='radio' value='$value' name='$name' $checked> <span>$label</span>";
 			}
 			return $html;
 		}
 	
 		private function renderDropdown(){
-			//echo '<xmp>'.print_r($this,1).'</xmp>';
 			$html = "<select " . $this->renderAttributes($this->attributes) . ">";
 			foreach($this->options as $option){
 				$attributes = $this->renderAttributes($option['attributes']);
 				$attributes.= ($this->attributes['value'] === $option['value']) ? ' selected' : "";
-				
-				
 				$html.= "<option $attributes value='" . $option['value'] . "'>" . $option['label'] . "</option>".chr(10);
 			}
 			$html.="</select>";
