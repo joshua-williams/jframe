@@ -139,8 +139,9 @@ namespace JFrame{
 			$html = '';
 			foreach($this->fields as $field){
 				if($field->type() == 'hidden') continue;
+				$parentAttributes = ($parentAttributes = $this->renderAttributes($field->parent())) ? " $parentAttributes" : "";
 				$label = ($l = $field->label()) ? "<label>$l</label>" : '';
-				$html.="<div>$label" . $field->render() . "</div>"; 
+				$html.="<div $parentAttributes>$label" . $field->render() . "</div>"; 
 			}
 			return $html;
 		}
@@ -150,7 +151,8 @@ namespace JFrame{
 			foreach($this->fields as $field){
 				if($field->type() == 'hidden') continue;
 				if(!$field->isValid()) continue;
-				$fields.="<tr><td>" . $field->label() . "<td><td>" . $field->render() . "</td></tr>".chr(10);
+				$parentAttributes = ($parentAttributes = $this->renderAttributes($field->parent())) ? " $parentAttributes" : "";
+				$fields.="<tr $parentAttributes><td>" . $field->label() . "<td><td>" . $field->render() . "</td></tr>".chr(10);
 			}
 			 return "<table>".chr(10) . "<tbody>" . chr(10) . $fields . "</tbody>" . chr(10) . "</table>";
 		}
