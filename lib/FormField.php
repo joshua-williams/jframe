@@ -77,6 +77,7 @@ namespace JFrame{
 				case 'password':
 				case 'hidden':
 				case 'file':
+				case 'checkbox':
 				case 'submit': return $this->renderText(); break;
 				case 'textarea': return $this->renderTextArea(); break;
 				case 'dropdown': return $this->renderDropdown(); break;
