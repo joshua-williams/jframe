@@ -74,6 +74,7 @@ namespace JFrame{
 			
 			switch($this->type){
 				case 'text':
+				case 'number':
 				case 'password':
 				case 'hidden':
 				case 'file':
@@ -116,7 +117,13 @@ namespace JFrame{
 		private function renderAttributes(Array $source = array()){
 			$attributes = array();
 			foreach($source as $key=>$val){
-				$attributes[] = $key . '="' . str_replace('"','\\"', $val) . '"';
+				if($this->type=='checkbox' && $key=='value'){
+					//die('<xmp>'.print_r($this,1));
+					if($val) $attributes[] = "checked";
+				}else{
+					$attributes[] = $key . '="' . str_replace('"','\\"', $val) . '"';
+				}
+				
 			}
 			return implode(' ', $attributes);
 		}
@@ -130,6 +137,7 @@ namespace JFrame{
 		}
 	
 		private function renderText(){
+			//if($this->type=='checkbox') die('<xmp>'.print_r($this,1));
 			return "<input type='$this->type' " . $this->renderAttributes($this->attributes) . $this->renderValue() . "/>";
 				
 		}
