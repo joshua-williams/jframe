@@ -1,4 +1,4 @@
-<?php 
+∑∑<?php 
 
 namespace JFrame{
 	
@@ -56,7 +56,7 @@ namespace JFrame{
 				if($value === 'no_val'){
 					return Vars::getFrom($this->attributes, $attr);
 				}
-				if(!is_string($value)) return false;
+				if(is_array($value) || is_object($value)) return false;
 				$this->attributes[$attr] = $value;
 			}elseif(is_array($attr)){
 				foreach($attr as $_attr=>$_value){
